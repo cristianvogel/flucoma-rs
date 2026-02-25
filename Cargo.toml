@@ -1,0 +1,11 @@
+[package]
+name = "flucoma-rs"
+version = "0.1.0"
+edition = "2021"
+description = "Safe Rust bindings for flucoma-core audio analysis algorithms"
+license = "BSD-3-Clause"
+categories = ["multimedia::audio"]
+keywords = ["audio", "flucoma", "spectral", "analysis", "dsp"]
+
+[dependencies]
+flucoma-sys = { version = "0.1.0", path = "./flucoma-sys" }

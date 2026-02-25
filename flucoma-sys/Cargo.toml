@@ -1,0 +1,15 @@
+[package]
+name = "flucoma-sys"
+version = "0.1.0"
+edition = "2021"
+description = "Low-level FFI bindings for flucoma-core"
+license = "BSD-3-Clause"
+links = "flucoma"
+
+[dependencies]
+cpp = "^0.5"
+
+[build-dependencies]
+cc = "^1.2"
+cmake = "^0.1"
+cpp_build = "^0.5"
