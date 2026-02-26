@@ -107,14 +107,17 @@ impl AudioTransport {
         self.buf.split_at(self.window_size)
     }
 
+    /// Analysis/synthesis window size in samples.
     pub fn window_size(&self) -> usize {
         self.window_size
     }
 
+    /// FFT size in samples.
     pub fn fft_size(&self) -> usize {
         self.fft_size
     }
 
+    /// Hop size between frames in samples.
     pub fn hop_size(&self) -> usize {
         self.hop_size
     }

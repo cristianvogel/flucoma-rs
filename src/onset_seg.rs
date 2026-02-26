@@ -104,10 +104,12 @@ impl OnsetSegmentation {
         )
     }
 
+    /// Analysis window size in samples.
     pub fn window_size(&self) -> usize {
         self.window_size
     }
 
+    /// FFT size in samples.
     pub fn fft_size(&self) -> usize {
         self.fft_size
     }

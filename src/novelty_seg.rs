@@ -86,6 +86,7 @@ impl NoveltySegmentation {
         )
     }
 
+    /// Dimensionality of the input feature vectors.
     pub fn n_dims(&self) -> usize {
         self.n_dims
     }

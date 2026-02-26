@@ -83,6 +83,7 @@ impl Loudness {
         }
     }
 
+    /// Analysis frame size in samples.
     pub fn frame_size(&self) -> usize {
         self.frame_size
     }

@@ -162,15 +162,22 @@ impl Stft {
         spec
     }
 
+    /// Analysis window size in samples.
     pub fn window_size(&self) -> usize {
         self.window_size
     }
+
+    /// FFT size in samples.
     pub fn fft_size(&self) -> usize {
         self.fft_size
     }
+
+    /// Hop size between frames in samples.
     pub fn hop_size(&self) -> usize {
         self.hop_size
     }
+
+    /// Number of complex bins per spectrum (`fft_size / 2 + 1`).
     pub fn num_bins(&self) -> usize {
         self.num_bins
     }
@@ -262,15 +269,22 @@ impl Istft {
         );
     }
 
+    /// Synthesis window size in samples.
     pub fn window_size(&self) -> usize {
         self.window_size
     }
+
+    /// FFT size in samples.
     pub fn fft_size(&self) -> usize {
         self.fft_size
     }
+
+    /// Hop size between frames in samples.
     pub fn hop_size(&self) -> usize {
         self.hop_size
     }
+
+    /// Number of complex bins per spectrum (`fft_size / 2 + 1`).
     pub fn num_bins(&self) -> usize {
         self.num_bins
     }

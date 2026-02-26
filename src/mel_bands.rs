@@ -107,9 +107,12 @@ impl MelBands {
         output
     }
 
+    /// Number of mel bands in each output frame.
     pub fn n_bands(&self) -> usize {
         self.n_bands
     }
+
+    /// Number of FFT magnitude bins expected as input (`fft_size / 2 + 1`).
     pub fn n_bins(&self) -> usize {
         self.n_bins
     }
