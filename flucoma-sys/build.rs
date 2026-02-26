@@ -31,8 +31,12 @@ fn main() {
             "CMAKE_MSVC_RUNTIME_LIBRARY",
             "MultiThreaded$<$<CONFIG:Debug>:Debug>",
         )
-        // Enable C++ exception handling -- required by foonathan/memory.
-        .cxxflag("/EHsc")
+        // Enable C++ exception handling for msvc (required by foonathan/memory)
+        .cxxflag(if cfg!(target_env = "msvc") {
+            "/EHsc"
+        } else {
+            ""
+        })
         .build();
 
     let cmake_build = cmake_out.join("build");
@@ -49,12 +53,8 @@ fn main() {
         find_lib(&memory_build_dir.join("src"), profile, "foonathan_memory")
             .or_else(|| find_lib(&memory_build_dir, profile, "foonathan_memory"))
             .expect("could not find foonathan_memory library");
-    println!(
-        "cargo:rustc-link-search=native={}",
-        memory_lib_dir.display()
-    );
+    println!("cargo:rustc-link-search=all={}", memory_lib_dir.display());
     println!("cargo:rustc-link-lib=static={}", memory_lib_stem);
-
 
     // -- Add system lib dependencies
 
@@ -90,7 +90,8 @@ fn main() {
         .define("EIGEN_MPL2_ONLY", "1")
         .define("FMT_HEADER_ONLY", "1")
         .define("NOMINMAX", None)
-        .define("_USE_MATH_DEFINES", None);
+        .define("_USE_MATH_DEFINES", None)
+        .flag_if_supported("-Wno-unused");
 
     if cfg!(target_env = "msvc") {
         build.flag("/EHsc").flag("/bigobj");
@@ -139,8 +140,8 @@ fn find_lib(base: &PathBuf, profile: &str, name: &str) -> Option<(PathBuf, Strin
             let fname = fname.to_string_lossy();
             if fname.contains(name) {
                 if let Some(stem) = fname
-                    .strip_suffix(".lib")
-                    .or_else(|| fname.strip_suffix(".a"))
+                    .strip_prefix("lib")
+                    .and_then(|s| s.strip_suffix(".lib").or_else(|| s.strip_suffix(".a")))
                 {
                     return Some(stem.to_owned());
                 }

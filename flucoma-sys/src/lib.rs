@@ -34,7 +34,7 @@ cpp! {{
 
 pub fn loudness_create(max_size: FlucomaIndex) -> *mut u8 {
     unsafe {
-        cpp!([max_size as "index"] -> *mut u8 as "void*" {
+        cpp!([max_size as "ptrdiff_t"] -> *mut u8 as "void*" {
             return static_cast<void*>(new Loudness(max_size));
         })
     }
@@ -50,7 +50,7 @@ pub fn loudness_destroy(ptr: *mut u8) {
 
 pub fn loudness_init(ptr: *mut u8, size: FlucomaIndex, sample_rate: f64) {
     unsafe {
-        cpp!([ptr as "Loudness*", size as "index", sample_rate as "double"] {
+        cpp!([ptr as "Loudness*", size as "ptrdiff_t", sample_rate as "double"] {
             ptr->init(size, sample_rate);
         })
     }
@@ -69,7 +69,7 @@ pub fn loudness_process_frame(
     unsafe {
         cpp!([
             ptr as "Loudness*",
-            input as "const double*", input_len as "index",
+            input as "const double*", input_len as "ptrdiff_t",
             output as "double*",
             weighting as "bool", true_peak as "bool"
         ] {
@@ -91,8 +91,8 @@ pub fn stft_create(
 ) -> *mut u8 {
     unsafe {
         cpp!([
-            window_size as "index", fft_size as "index",
-            hop_size as "index", window_type as "index"
+            window_size as "ptrdiff_t", fft_size as "ptrdiff_t",
+            hop_size as "ptrdiff_t", window_type as "ptrdiff_t"
         ] -> *mut u8 as "void*" {
             return static_cast<void*>(new STFT(window_size, fft_size, hop_size, window_type));
         })
@@ -118,8 +118,8 @@ pub fn stft_process_frame(
     unsafe {
         cpp!([
             ptr as "STFT*",
-            input as "const double*", input_len as "index",
-            out_complex as "double*", num_bins as "index"
+            input as "const double*", input_len as "ptrdiff_t",
+            out_complex as "double*", num_bins as "ptrdiff_t"
         ] {
             auto* cptr = reinterpret_cast<std::complex<double>*>(out_complex);
             FluidTensorView<double, 1> in_v(const_cast<double*>(input), 0, input_len);
@@ -140,8 +140,8 @@ pub fn istft_create(
 ) -> *mut u8 {
     unsafe {
         cpp!([
-            window_size as "index", fft_size as "index",
-            hop_size as "index", window_type as "index"
+            window_size as "ptrdiff_t", fft_size as "ptrdiff_t",
+            hop_size as "ptrdiff_t", window_type as "ptrdiff_t"
         ] -> *mut u8 as "void*" {
             return static_cast<void*>(new ISTFT(window_size, fft_size, hop_size, window_type));
         })
@@ -167,8 +167,8 @@ pub fn istft_process_frame(
     unsafe {
         cpp!([
             ptr as "ISTFT*",
-            in_complex as "const double*", num_bins as "index",
-            output as "double*", output_len as "index"
+            in_complex as "const double*", num_bins as "ptrdiff_t",
+            output as "double*", output_len as "ptrdiff_t"
         ] {
             auto* cptr = reinterpret_cast<std::complex<double>*>(
                 const_cast<double*>(in_complex));
@@ -184,7 +184,7 @@ pub fn istft_process_frame(
 
 pub fn melbands_create(max_bands: FlucomaIndex, max_fft: FlucomaIndex) -> *mut u8 {
     unsafe {
-        cpp!([max_bands as "index", max_fft as "index"] -> *mut u8 as "void*" {
+        cpp!([max_bands as "ptrdiff_t", max_fft as "ptrdiff_t"] -> *mut u8 as "void*" {
             return static_cast<void*>(new MelBands(max_bands, max_fft));
         })
     }
@@ -211,8 +211,8 @@ pub fn melbands_init(
         cpp!([
             ptr as "MelBands*",
             lo_hz as "double", hi_hz as "double",
-            n_bands as "index", n_bins as "index",
-            sample_rate as "double", window_size as "index"
+            n_bands as "ptrdiff_t", n_bins as "ptrdiff_t",
+            sample_rate as "double", window_size as "ptrdiff_t"
         ] {
             ptr->init(lo_hz, hi_hz, n_bands, n_bins, sample_rate, window_size);
         })
@@ -232,8 +232,8 @@ pub fn melbands_process_frame(
     unsafe {
         cpp!([
             ptr as "MelBands*",
-            input as "const double*", input_len as "index",
-            output as "double*", output_len as "index",
+            input as "const double*", input_len as "ptrdiff_t",
+            output as "double*", output_len as "ptrdiff_t",
             mag_norm as "bool", use_power as "bool", log_output as "bool"
         ] {
             FluidTensorView<double, 1> in_v(const_cast<double*>(input), 0, input_len);
@@ -249,7 +249,7 @@ pub fn melbands_process_frame(
 
 pub fn onset_create(max_size: FlucomaIndex, max_filter_size: FlucomaIndex) -> *mut u8 {
     unsafe {
-        cpp!([max_size as "index", max_filter_size as "index"] -> *mut u8 as "void*" {
+        cpp!([max_size as "ptrdiff_t", max_filter_size as "ptrdiff_t"] -> *mut u8 as "void*" {
             Allocator alloc{};
             return static_cast<void*>(
                 new OnsetDetectionFunctions(max_size, max_filter_size, alloc));
@@ -274,7 +274,7 @@ pub fn onset_init(
     unsafe {
         cpp!([
             ptr as "OnsetDetectionFunctions*",
-            window_size as "index", fft_size as "index", filter_size as "index"
+            window_size as "ptrdiff_t", fft_size as "ptrdiff_t", filter_size as "ptrdiff_t"
         ] {
             ptr->init(window_size, fft_size, filter_size);
         })
@@ -293,8 +293,8 @@ pub fn onset_process_frame(
     unsafe {
         cpp!([
             ptr as "OnsetDetectionFunctions*",
-            input as "const double*", input_len as "index",
-            function as "index", filter_size as "index", frame_delta as "index"
+            input as "const double*", input_len as "ptrdiff_t",
+            function as "ptrdiff_t", filter_size as "ptrdiff_t", frame_delta as "ptrdiff_t"
         ] -> f64 as "double" {
             FluidTensorView<double, 1> in_v(const_cast<double*>(input), 0, input_len);
             Allocator alloc{};
@@ -308,7 +308,7 @@ pub fn onset_process_frame(
 
 pub fn onset_seg_create(max_size: FlucomaIndex, max_filter_size: FlucomaIndex) -> *mut u8 {
     unsafe {
-        cpp!([max_size as "index", max_filter_size as "index"] -> *mut u8 as "void*" {
+        cpp!([max_size as "ptrdiff_t", max_filter_size as "ptrdiff_t"] -> *mut u8 as "void*" {
             Allocator alloc{};
             return static_cast<void*>(
                 new OnsetSegmentation(max_size, max_filter_size, alloc));
@@ -333,7 +333,7 @@ pub fn onset_seg_init(
     unsafe {
         cpp!([
             ptr as "OnsetSegmentation*",
-            window_size as "index", fft_size as "index", filter_size as "index"
+            window_size as "ptrdiff_t", fft_size as "ptrdiff_t", filter_size as "ptrdiff_t"
         ] {
             ptr->init(window_size, fft_size, filter_size);
         })
@@ -354,9 +354,9 @@ pub fn onset_seg_process_frame(
     unsafe {
         cpp!([
             ptr as "OnsetSegmentation*",
-            input as "const double*", input_len as "index",
-            function as "index", filter_size as "index",
-            threshold as "double", debounce as "index", frame_delta as "index"
+            input as "const double*", input_len as "ptrdiff_t",
+            function as "ptrdiff_t", filter_size as "ptrdiff_t",
+            threshold as "double", debounce as "ptrdiff_t", frame_delta as "ptrdiff_t"
         ] -> f64 as "double" {
             FluidTensorView<double, 1> in_v(const_cast<double*>(input), 0, input_len);
             Allocator alloc{};
@@ -415,9 +415,9 @@ pub fn env_seg_process_sample(
             sample as "double",
             on_threshold as "double", off_threshold as "double",
             floor as "double",
-            fast_ramp_up as "index", slow_ramp_up as "index",
-            fast_ramp_down as "index", slow_ramp_down as "index",
-            hi_pass_freq as "double", debounce as "index"
+            fast_ramp_up as "ptrdiff_t", slow_ramp_up as "ptrdiff_t",
+            fast_ramp_down as "ptrdiff_t", slow_ramp_down as "ptrdiff_t",
+            hi_pass_freq as "double", debounce as "ptrdiff_t"
         ] -> f64 as "double" {
             return ptr->processSample(sample, on_threshold, off_threshold, floor,
                 fast_ramp_up, slow_ramp_up, fast_ramp_down, slow_ramp_down,
@@ -436,7 +436,7 @@ pub fn novelty_seg_create(
 ) -> *mut u8 {
     unsafe {
         cpp!([
-            max_kernel_size as "index", max_dims as "index", max_filter_size as "index"
+            max_kernel_size as "ptrdiff_t", max_dims as "ptrdiff_t", max_filter_size as "ptrdiff_t"
         ] -> *mut u8 as "void*" {
             Allocator alloc{};
             return static_cast<void*>(
@@ -462,7 +462,7 @@ pub fn novelty_seg_init(
     unsafe {
         cpp!([
             ptr as "NoveltySegmentation*",
-            kernel_size as "index", filter_size as "index", n_dims as "index"
+            kernel_size as "ptrdiff_t", filter_size as "ptrdiff_t", n_dims as "ptrdiff_t"
         ] {
             Allocator alloc{};
             ptr->init(kernel_size, filter_size, n_dims, alloc);
@@ -481,8 +481,8 @@ pub fn novelty_seg_process_frame(
     unsafe {
         cpp!([
             ptr as "NoveltySegmentation*",
-            input as "const double*", input_len as "index",
-            threshold as "double", min_slice_length as "index"
+            input as "const double*", input_len as "ptrdiff_t",
+            threshold as "double", min_slice_length as "ptrdiff_t"
         ] -> f64 as "double" {
             FluidTensorView<double, 1> in_v(const_cast<double*>(input), 0, input_len);
             Allocator alloc{};
@@ -501,7 +501,7 @@ pub fn transient_seg_create(
 ) -> *mut u8 {
     unsafe {
         cpp!([
-            max_order as "index", max_block_size as "index", max_pad_size as "index"
+            max_order as "ptrdiff_t", max_block_size as "ptrdiff_t", max_pad_size as "ptrdiff_t"
         ] -> *mut u8 as "void*" {
             Allocator alloc{};
             return static_cast<void*>(
@@ -527,7 +527,7 @@ pub fn transient_seg_init(
     unsafe {
         cpp!([
             ptr as "TransientSegmentation*",
-            order as "index", block_size as "index", pad_size as "index"
+            order as "ptrdiff_t", block_size as "ptrdiff_t", pad_size as "ptrdiff_t"
         ] {
             ptr->init(order, block_size, pad_size);
         })
@@ -547,7 +547,7 @@ pub fn transient_seg_set_detection_params(
         cpp!([
             ptr as "TransientSegmentation*",
             power as "double", thresh_hi as "double", thresh_lo as "double",
-            half_window as "index", hold as "index", min_segment as "index"
+            half_window as "ptrdiff_t", hold as "ptrdiff_t", min_segment as "ptrdiff_t"
         ] {
             ptr->setDetectionParameters(power, thresh_hi, thresh_lo, half_window, hold, min_segment);
         })
@@ -566,8 +566,8 @@ pub fn transient_seg_process(
     unsafe {
         cpp!([
             ptr as "TransientSegmentation*",
-            input as "const double*", input_len as "index",
-            output as "double*", output_len as "index"
+            input as "const double*", input_len as "ptrdiff_t",
+            output as "double*", output_len as "ptrdiff_t"
         ] {
             FluidTensorView<double, 1> in_v(const_cast<double*>(input), 0, input_len);
             FluidTensorView<double, 1> out_v(output, 0, output_len);
@@ -579,7 +579,7 @@ pub fn transient_seg_process(
 
 pub fn transient_seg_hop_size(ptr: *mut u8) -> FlucomaIndex {
     unsafe {
-        cpp!([ptr as "TransientSegmentation*"] -> FlucomaIndex as "index" {
+        cpp!([ptr as "TransientSegmentation*"] -> FlucomaIndex as "ptrdiff_t" {
             return ptr->hopSize();
         })
     }
@@ -587,7 +587,7 @@ pub fn transient_seg_hop_size(ptr: *mut u8) -> FlucomaIndex {
 
 pub fn transient_seg_input_size(ptr: *mut u8) -> FlucomaIndex {
     unsafe {
-        cpp!([ptr as "TransientSegmentation*"] -> FlucomaIndex as "index" {
+        cpp!([ptr as "TransientSegmentation*"] -> FlucomaIndex as "ptrdiff_t" {
             return ptr->inputSize();
         })
     }
@@ -598,7 +598,7 @@ pub fn transient_seg_input_size(ptr: *mut u8) -> FlucomaIndex {
 
 pub fn audio_transport_create(max_fft_size: FlucomaIndex) -> *mut u8 {
     unsafe {
-        cpp!([max_fft_size as "index"] -> *mut u8 as "void*" {
+        cpp!([max_fft_size as "ptrdiff_t"] -> *mut u8 as "void*" {
             Allocator alloc{};
             return static_cast<void*>(new AudioTransport(max_fft_size, alloc));
         })
@@ -622,7 +622,7 @@ pub fn audio_transport_init(
     unsafe {
         cpp!([
             ptr as "AudioTransport*",
-            window_size as "index", fft_size as "index", hop_size as "index"
+            window_size as "ptrdiff_t", fft_size as "ptrdiff_t", hop_size as "ptrdiff_t"
         ] {
             ptr->init(window_size, fft_size, hop_size);
         })
@@ -643,7 +643,7 @@ pub fn audio_transport_process_frame(
         cpp!([
             ptr as "AudioTransport*",
             in1 as "const double*", in2 as "const double*",
-            frame_len as "index",
+            frame_len as "ptrdiff_t",
             weight as "double",
             output as "double*"
         ] {

@@ -102,7 +102,7 @@ pub fn spectralshape_create() -> *mut u8 {
 ```rust
 pub fn onset_create(max_size: isize, max_filter_size: isize) -> *mut u8 {
     unsafe {
-        cpp!([max_size as "index", max_filter_size as "index"] -> *mut u8 as "void*" {
+        cpp!([max_size as "ptrdiff_t", max_filter_size as "ptrdiff_t"] -> *mut u8 as "void*" {
             Allocator alloc{};
             return static_cast<void*>(
                 new OnsetDetectionFunctions(max_size, max_filter_size, alloc));
@@ -126,7 +126,7 @@ pub fn spectralshape_destroy(ptr: *mut u8) {
 ```rust
 pub fn spectralshape_init(ptr: *mut u8, size: isize, sample_rate: f64) {
     unsafe {
-        cpp!([ptr as "SpectralShape*", size as "index", sample_rate as "double"] {
+        cpp!([ptr as "SpectralShape*", size as "ptrdiff_t", sample_rate as "double"] {
             ptr->init(size, sample_rate);
         })
     }
@@ -146,8 +146,8 @@ pub fn spectralshape_process_frame(
     unsafe {
         cpp!([
             ptr as "SpectralShape*",
-            input as "const double*", input_len as "index",
-            output as "double*", output_len as "index",
+            input as "const double*", input_len as "ptrdiff_t",
+            output as "double*", output_len as "ptrdiff_t",
             sample_rate as "double",
             min_freq as "double", max_freq as "double", rolloff_target as "double",
             log_freq as "bool", use_power as "bool"
