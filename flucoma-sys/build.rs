@@ -136,14 +136,17 @@ fn find_lib(base: &PathBuf, profile: &str, name: &str) -> Option<(PathBuf, Strin
     // Scan `dir` for a `.lib` or `.a` file whose name contains `name`.
     let lib_stem_in = |dir: &PathBuf, name: &str| -> Option<String> {
         fs::read_dir(dir).ok()?.flatten().find_map(|e| {
-            let fname = e.file_name();
-            let fname = fname.to_string_lossy();
-            if fname.contains(name) {
-                if let Some(stem) = fname
-                    .strip_prefix("lib")
-                    .and_then(|s| s.strip_suffix(".lib").or_else(|| s.strip_suffix(".a")))
-                {
-                    return Some(stem.to_owned());
+            let fname = e.file_name().to_string_lossy().to_string();
+            if fname.contains(name) && (fname.ends_with(".a") || fname.ends_with(".lib")) {
+                if fname.ends_with(".lib") {
+                    // XXX.lib on windows
+                    return fname.strip_suffix(".lib").map(String::from);
+                } else {
+                    // libXXX.a on unix
+                    return fname
+                        .strip_prefix("lib")
+                        .and_then(|s| s.strip_suffix(".a"))
+                        .map(String::from);
                 }
             }
             None
