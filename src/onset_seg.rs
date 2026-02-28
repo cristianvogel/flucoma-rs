@@ -28,7 +28,7 @@ impl OnsetSegmentation {
     /// * `window_size`  - Analysis window size in samples.
     /// * `fft_size`     - FFT size (must be >= `window_size`).
     /// * `filter_size`  - Median filter size for background subtraction
-    ///                    (use 0 or 1 to disable, minimum effective value is 3).
+    ///   (use 0 or 1 to disable, minimum effective value is 3).
     ///
     /// # Errors
     /// Returns an error string if parameters are invalid or allocation fails.
@@ -65,7 +65,7 @@ impl OnsetSegmentation {
     ///
     /// # Arguments
     /// * `input`       - Audio samples. Length must be at least `window_size`
-    ///                   (or `window_size + frame_delta` when `frame_delta > 0`).
+    ///   (or `window_size + frame_delta` when `frame_delta > 0`).
     /// * `function`    - Onset detection function to use.
     /// * `filter_size` - Median filter size for this frame (0 to disable).
     /// * `threshold`   - Detection threshold. Values above trigger an onset.

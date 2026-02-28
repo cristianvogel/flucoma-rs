@@ -48,13 +48,13 @@ impl Loudness {
     /// Process a single audio frame.
     ///
     /// # Arguments
-    /// * `input`      - Audio samples; must have exactly `frame_size` elements.
+    /// * `input` - Audio samples; must have exactly `frame_size` elements.
     /// * `k_weighting` - Apply K-weighting filter (as per EBU R128).
-    /// * `true_peak`  - Use true peak detection (interpolated); otherwise
-    ///                  reports the absolute maximum sample.
+    /// * `true_peak` - Use true peak detection (interpolated); otherwise
+    ///   reports the absolute maximum sample.
     ///
     /// # Panics
-    /// Panics if `input.len() != frame_size`.
+    ///  if `input.len() != frame_size`.
     pub fn process_frame(
         &mut self,
         input: &[f64],
