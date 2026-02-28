@@ -2,15 +2,18 @@
 //! audio analysis algorithms.
 
 mod audio_transport;
+mod bufstats;
 mod envelope_seg;
+mod kdtree;
 mod loudness;
 mod mel_bands;
+mod multi_stats;
 mod novelty_seg;
 mod onset;
 mod onset_seg;
+mod running_stats;
 mod stft;
 mod transient_seg;
-mod kdtree;
 
 pub mod analyzation {
     pub use super::loudness::Loudness;
@@ -32,4 +35,10 @@ pub mod segmentation {
 
 pub mod search {
     pub use super::kdtree::KDTree;
+}
+
+pub mod data {
+    pub use super::bufstats::{BufStat, BufStats, BufStatsConfig, BufStatsOutput, BufStatsSelect};
+    pub use super::multi_stats::{MultiStats, MultiStatsConfig, MultiStatsOutput};
+    pub use super::running_stats::RunningStats;
 }

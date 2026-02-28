@@ -53,6 +53,33 @@ Builds a 2D KDTree, inserts named points, and queries nearest neighbours for tar
 cargo run --example kdtree-search
 ```
 
+### `bufstats-demo` -- buffer statistics with derivatives + weights
+
+Runs `BufStats` on the bundled FluCoMa example WAV with stat selection, first-derivative stats,
+outlier cutoff, and triangular frame weights.
+
+```sh
+cargo run --example bufstats-demo
+```
+
+### `running-stats-demo` -- streaming mean/std + reset
+
+Feeds a small vector stream into `RunningStats`, prints live running mean/sample stddev updates,
+then demonstrates `clear()` reset behavior.
+
+```sh
+cargo run --example running-stats-demo
+```
+
+### `multi-stats-demo` -- direct aggregate stats
+
+Runs `MultiStats` directly on the bundled FluCoMa example WAV and prints all
+7 statistics across derivatives (with and without weights).
+
+```sh
+cargo run --example multi-stats-demo
+```
+
 
 ## API Usage Examples
 

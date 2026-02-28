@@ -145,9 +145,6 @@ mod tests {
         let mut impulse = vec![0.0f64; 1024];
         impulse[512] = 1.0;
         let val = seg.process_frame(&impulse, OnsetFunction::PowerSpectrum, 0, 0.01, 0, 0);
-        assert!(
-            val == 1.0 || val == 0.0,
-            "expected 0.0 or 1.0, got {val}"
-        );
+        assert!(val == 1.0 || val == 0.0, "expected 0.0 or 1.0, got {val}");
     }
 }

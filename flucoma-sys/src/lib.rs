@@ -4,7 +4,6 @@
 ///
 /// All handles are opaque `*mut u8` pointers. Do not use these functions
 /// directly -- use the safe wrappers in the `flucoma-rs` crate instead.
-
 use cpp::cpp;
 
 /// Signed index type matching `ptrdiff_t` used by flucoma-core.
@@ -26,6 +25,8 @@ cpp! {{
     #include <flucoma/algorithms/public/TransientSegmentation.hpp>
     #include <flucoma/algorithms/public/AudioTransport.hpp>
     #include <flucoma/algorithms/public/KDTree.hpp>
+    #include <flucoma/algorithms/public/MultiStats.hpp>
+    #include <flucoma/algorithms/public/RunningStats.hpp>
     using namespace fluid;
     using namespace fluid::algorithm;
 }}
@@ -723,3 +724,136 @@ pub fn kdtree_k_nearest(
     }
 }
 
+// -------------------------------------------------------------------------------------------------
+// MultiStats
+
+pub fn multistats_create() -> *mut u8 {
+    unsafe {
+        cpp!([] -> *mut u8 as "void*" {
+            return static_cast<void*>(new MultiStats());
+        })
+    }
+}
+
+pub fn multistats_destroy(ptr: *mut u8) {
+    unsafe {
+        cpp!([ptr as "MultiStats*"] {
+            delete ptr;
+        })
+    }
+}
+
+pub fn multistats_init(
+    ptr: *mut u8,
+    num_derivatives: FlucomaIndex,
+    low_percentile: f64,
+    middle_percentile: f64,
+    high_percentile: f64,
+) {
+    unsafe {
+        cpp!([
+            ptr as "MultiStats*",
+            num_derivatives as "ptrdiff_t",
+            low_percentile as "double",
+            middle_percentile as "double",
+            high_percentile as "double"
+        ] {
+            ptr->init(num_derivatives, low_percentile, middle_percentile, high_percentile);
+        })
+    }
+}
+
+pub fn multistats_process(
+    ptr: *mut u8,
+    input: *const f64,
+    num_channels: FlucomaIndex,
+    num_frames: FlucomaIndex,
+    output: *mut f64,
+    output_cols: FlucomaIndex,
+    outliers_cutoff: f64,
+    weights: *const f64,
+    weights_len: FlucomaIndex,
+) {
+    unsafe {
+        cpp!([
+            ptr as "MultiStats*",
+            input as "const double*",
+            num_channels as "ptrdiff_t",
+            num_frames as "ptrdiff_t",
+            output as "double*",
+            output_cols as "ptrdiff_t",
+            outliers_cutoff as "double",
+            weights as "const double*",
+            weights_len as "ptrdiff_t"
+        ] {
+            FluidTensorView<double, 2> in_v(
+                const_cast<double*>(input),
+                0,
+                num_channels,
+                num_frames
+            );
+            FluidTensorView<double, 2> out_v(output, 0, num_channels, output_cols);
+            if (weights_len > 0 && weights != nullptr) {
+                RealVectorView weight_v(const_cast<double*>(weights), 0, weights_len);
+                ptr->process(in_v, out_v, outliers_cutoff, weight_v);
+            } else {
+                RealVectorView no_weights(nullptr, 0, 0);
+                ptr->process(in_v, out_v, outliers_cutoff, no_weights);
+            }
+        })
+    }
+}
+
+// -------------------------------------------------------------------------------------------------
+// RunningStats
+
+pub fn running_stats_create() -> *mut u8 {
+    unsafe {
+        cpp!([] -> *mut u8 as "void*" {
+            return static_cast<void*>(new RunningStats());
+        })
+    }
+}
+
+pub fn running_stats_destroy(ptr: *mut u8) {
+    unsafe {
+        cpp!([ptr as "RunningStats*"] {
+            delete ptr;
+        })
+    }
+}
+
+pub fn running_stats_init(ptr: *mut u8, history_size: FlucomaIndex, input_size: FlucomaIndex) {
+    unsafe {
+        cpp!([
+            ptr as "RunningStats*",
+            history_size as "ptrdiff_t",
+            input_size as "ptrdiff_t"
+        ] {
+            ptr->init(history_size, input_size);
+        })
+    }
+}
+
+pub fn running_stats_process(
+    ptr: *mut u8,
+    input: *const f64,
+    input_len: FlucomaIndex,
+    mean_out: *mut f64,
+    stddev_out: *mut f64,
+) {
+    unsafe {
+        cpp!([
+            ptr as "RunningStats*",
+            input as "const double*",
+            input_len as "ptrdiff_t",
+            mean_out as "double*",
+            stddev_out as "double*"
+        ] {
+            FluidTensorView<double, 1> in_v(const_cast<double*>(input), 0, input_len);
+            FluidTensorView<double, 1> mean_v(mean_out, 0, input_len);
+            FluidTensorView<double, 1> std_v(stddev_out, 0, input_len);
+            ptr->process(in_v, mean_v, std_v);
+        })
+    }
+}
