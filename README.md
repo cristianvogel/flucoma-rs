@@ -47,6 +47,15 @@ Builds a 2D KDTree, inserts named points, and queries nearest neighbours for tar
 cargo run --example kdtree-search
 ```
 
+### `bufstats-demo` -- buffer statistics with derivatives + weights
+
+Runs `BufStats` on the bundled FluCoMa example WAV with stat selection, first-derivative stats,
+outlier cutoff, and triangular frame weights.
+
+```sh
+cargo run --example bufstats-demo
+```
+
 
 ## API Usage Examples
 
