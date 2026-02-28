@@ -9,7 +9,9 @@ use crate::standardize::Standardize;
 
 /// Optional preprocessing scaler applied before PCA fit/transform.
 #[derive(Debug, Clone, Copy)]
+#[derive(Default)]
 pub enum PcaScaler {
+    #[default]
     None,
     Normalize {
         min: f64,
@@ -22,11 +24,6 @@ pub enum PcaScaler {
     },
 }
 
-impl Default for PcaScaler {
-    fn default() -> Self {
-        Self::None
-    }
-}
 
 /// PCA settings.
 #[derive(Debug, Clone, Copy)]
