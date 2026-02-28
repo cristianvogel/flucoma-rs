@@ -10,6 +10,7 @@ Note: When building this crate locally, clone the repository with `git clone --r
 This is a work in progress. See [STATUS.md](./STATUS.md) which functions are wrapped, and which not. 
 For guidance on when to choose `Normalize`, `Standardize`, or `RobustScale`, see
 [Comparing Scalers](https://learn.flucoma.org/learn/comparing-scalers/).
+Per-wrapper API documentation lives in [docs/flucoma-rs](./docs/flucoma-rs/README.md).
 
 See [EXTEND.md](./EXTEND.md) on how to create new wrappers. Pull requests are welcome!
 
@@ -76,6 +77,15 @@ explained variance and ASCII 2D projection plots for quick comparison.
 
 ```sh
 cargo run --example pca-scaler-demo
+```
+
+### `pca-random-demo` -- PCA on random correlated source
+
+Builds deterministic pseudo-random correlated data, runs PCA with
+`RobustScale(25,75)`, and prints explained variance + reconstruction RMSE.
+
+```sh
+cargo run --example pca-random-demo
 ```
 
 
