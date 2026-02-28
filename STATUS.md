@@ -35,6 +35,7 @@
 
 ### Machine Learning & Statistics (`flucoma_rs::data`)
 
+- [x] [`BufStats`](https://learn.flucoma.org/reference/bufstats/) as `flucoma_rs::data::BufStats` -- offline buffer statistics with derivative stats, percentile control, selection mask, weights, and outlier cutoff
 - [ ] [`MultiStats`](https://learn.flucoma.org/reference/stats) -- aggregate statistics (mean, std, min, max, ...) over a descriptor buffer
 - [ ] [`RunningStats`](https://learn.flucoma.org/reference/stats) -- incremental running statistics
 - [ ] [`Normalization`](https://learn.flucoma.org/reference/normalize) -- min-max feature normalization
