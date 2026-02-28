@@ -35,13 +35,13 @@ impl NoveltySegmentation {
         n_dims: usize,
         filter_size: usize,
     ) -> Result<Self, &'static str> {
-        if kernel_size == 0 || kernel_size % 2 == 0 {
+        if kernel_size == 0 || kernel_size.is_multiple_of(2) {
             return Err("kernel_size must be odd and > 0");
         }
         if n_dims == 0 {
             return Err("n_dims must be > 0");
         }
-        if filter_size == 0 || filter_size % 2 == 0 {
+        if filter_size == 0 || filter_size.is_multiple_of(2) {
             return Err("filter_size must be odd and > 0");
         }
 
