@@ -65,6 +65,15 @@ then demonstrates `clear()` reset behavior.
 cargo run --example running-stats-demo
 ```
 
+### `multi-stats-demo` -- direct aggregate stats
+
+Runs `MultiStats` directly on the bundled FluCoMa example WAV and prints all
+7 statistics across derivatives (with and without weights).
+
+```sh
+cargo run --example multi-stats-demo
+```
+
 
 ## API Usage Examples
 
