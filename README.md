@@ -62,6 +62,15 @@ outlier cutoff, and triangular frame weights.
 cargo run --example bufstats-demo
 ```
 
+### `running-stats-demo` -- streaming mean/std + reset
+
+Feeds a small vector stream into `RunningStats`, prints live running mean/sample stddev updates,
+then demonstrates `clear()` reset behavior.
+
+```sh
+cargo run --example running-stats-demo
+```
+
 
 ## API Usage Examples
 
