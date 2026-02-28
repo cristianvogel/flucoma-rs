@@ -27,6 +27,8 @@ cpp! {{
     #include <flucoma/algorithms/public/KDTree.hpp>
     #include <flucoma/algorithms/public/MultiStats.hpp>
     #include <flucoma/algorithms/public/Normalization.hpp>
+    #include <flucoma/algorithms/public/RobustScaling.hpp>
+    #include <flucoma/algorithms/public/Standardization.hpp>
     #include <flucoma/algorithms/public/RunningStats.hpp>
     using namespace fluid;
     using namespace fluid::algorithm;
@@ -925,6 +927,145 @@ pub fn normalization_process(
 pub fn normalization_initialized(ptr: *mut u8) -> bool {
     unsafe {
         cpp!([ptr as "Normalization*"] -> bool as "bool" {
+            return ptr->initialized();
+        })
+    }
+}
+
+// -------------------------------------------------------------------------------------------------
+// Standardization
+
+pub fn standardization_create() -> *mut u8 {
+    unsafe {
+        cpp!([] -> *mut u8 as "void*" {
+            return static_cast<void*>(new Standardization());
+        })
+    }
+}
+
+pub fn standardization_destroy(ptr: *mut u8) {
+    unsafe {
+        cpp!([ptr as "Standardization*"] {
+            delete ptr;
+        })
+    }
+}
+
+pub fn standardization_fit(
+    ptr: *mut u8,
+    input: *const f64,
+    rows: FlucomaIndex,
+    cols: FlucomaIndex,
+) {
+    unsafe {
+        cpp!([
+            ptr as "Standardization*",
+            input as "const double*",
+            rows as "ptrdiff_t", cols as "ptrdiff_t"
+        ] {
+            FluidTensorView<double, 2> in_v(const_cast<double*>(input), 0, rows, cols);
+            ptr->init(in_v);
+        })
+    }
+}
+
+pub fn standardization_process(
+    ptr: *mut u8,
+    input: *const f64,
+    rows: FlucomaIndex,
+    cols: FlucomaIndex,
+    output: *mut f64,
+    inverse: bool,
+) {
+    unsafe {
+        cpp!([
+            ptr as "Standardization*",
+            input as "const double*",
+            rows as "ptrdiff_t", cols as "ptrdiff_t",
+            output as "double*",
+            inverse as "bool"
+        ] {
+            FluidTensorView<double, 2> in_v(const_cast<double*>(input), 0, rows, cols);
+            FluidTensorView<double, 2> out_v(output, 0, rows, cols);
+            ptr->process(in_v, out_v, inverse);
+        })
+    }
+}
+
+pub fn standardization_initialized(ptr: *mut u8) -> bool {
+    unsafe {
+        cpp!([ptr as "Standardization*"] -> bool as "bool" {
+            return ptr->initialized();
+        })
+    }
+}
+
+// -------------------------------------------------------------------------------------------------
+// RobustScaling
+
+pub fn robust_scaling_create() -> *mut u8 {
+    unsafe {
+        cpp!([] -> *mut u8 as "void*" {
+            return static_cast<void*>(new RobustScaling());
+        })
+    }
+}
+
+pub fn robust_scaling_destroy(ptr: *mut u8) {
+    unsafe {
+        cpp!([ptr as "RobustScaling*"] {
+            delete ptr;
+        })
+    }
+}
+
+pub fn robust_scaling_fit(
+    ptr: *mut u8,
+    low: f64,
+    high: f64,
+    input: *const f64,
+    rows: FlucomaIndex,
+    cols: FlucomaIndex,
+) {
+    unsafe {
+        cpp!([
+            ptr as "RobustScaling*",
+            low as "double", high as "double",
+            input as "const double*",
+            rows as "ptrdiff_t", cols as "ptrdiff_t"
+        ] {
+            FluidTensorView<double, 2> in_v(const_cast<double*>(input), 0, rows, cols);
+            ptr->init(low, high, in_v);
+        })
+    }
+}
+
+pub fn robust_scaling_process(
+    ptr: *mut u8,
+    input: *const f64,
+    rows: FlucomaIndex,
+    cols: FlucomaIndex,
+    output: *mut f64,
+    inverse: bool,
+) {
+    unsafe {
+        cpp!([
+            ptr as "RobustScaling*",
+            input as "const double*",
+            rows as "ptrdiff_t", cols as "ptrdiff_t",
+            output as "double*",
+            inverse as "bool"
+        ] {
+            FluidTensorView<double, 2> in_v(const_cast<double*>(input), 0, rows, cols);
+            FluidTensorView<double, 2> out_v(output, 0, rows, cols);
+            ptr->process(in_v, out_v, inverse);
+        })
+    }
+}
+
+pub fn robust_scaling_initialized(ptr: *mut u8) -> bool {
+    unsafe {
+        cpp!([ptr as "RobustScaling*"] -> bool as "bool" {
             return ptr->initialized();
         })
     }

@@ -35,6 +35,8 @@
 
 ### Machine Learning & Statistics (`flucoma_rs::data`)
 
+Scaler choice note: [Comparing Scalers](https://learn.flucoma.org/learn/comparing-scalers/) explains practical tradeoffs between `Normalize`, `Standardize`, and `RobustScale`.
+
 - [x] [`BufStats`](https://learn.flucoma.org/reference/bufstats/) as `flucoma_rs::data::BufStats` -- offline buffer statistics with derivative stats, percentile control, selection mask, weights, and outlier cutoff
 - [x] [`MultiStats`](https://learn.flucoma.org/reference/stats) -- aggregate statistics (mean, std, min, max, ...) over a descriptor buffer
 - [x] [`RunningStats`](https://learn.flucoma.org/reference/stats) as `flucoma_rs::data::RunningStats` -- incremental running mean and sample standard deviation with resettable history
