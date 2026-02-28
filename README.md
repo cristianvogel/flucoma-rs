@@ -8,6 +8,8 @@ Note: When building this crate locally, clone the repository with `git clone --r
 ## Status
 
 This is a work in progress. See [STATUS.md](./STATUS.md) which functions are wrapped, and which not. 
+For guidance on when to choose `Normalize`, `Standardize`, or `RobustScale`, see
+[Comparing Scalers](https://learn.flucoma.org/learn/comparing-scalers/).
 
 See [EXTEND.md](./EXTEND.md) on how to create new wrappers. Pull requests are welcome!
 
@@ -25,7 +27,7 @@ For fully offline CI, `flucoma-sys` also supports `FLUCOMA_FULLY_DISCONNECTED=1`
 dependency path overrides (`FLUCOMA_*_PATH` variables; see `flucoma-sys/README.md`).
 
 
-## CLI Examples
+## CLI Examples (selection)
 
 ### `unique-slices` -- deduplicated onset slicer
 
@@ -45,14 +47,6 @@ Morphs two audio files together using [optimal-transport](https://learn.flucoma.
 cargo run --example audio-transport -- input1.wav input2.wav output.wav
 ```
 
-### `kdtree-search` -- nearest-neighbour search
-
-Builds a 2D KDTree, inserts named points, and queries nearest neighbours for target vectors.
-
-```sh
-cargo run --example kdtree-search
-```
-
 ### `bufstats-demo` -- buffer statistics with derivatives + weights
 
 Runs `BufStats` on the bundled FluCoMa example WAV with stat selection, first-derivative stats,
@@ -62,23 +56,18 @@ outlier cutoff, and triangular frame weights.
 cargo run --example bufstats-demo
 ```
 
-### `running-stats-demo` -- streaming mean/std + reset
 
-Feeds a small vector stream into `RunningStats`, prints live running mean/sample stddev updates,
-then demonstrates `clear()` reset behavior.
+### `compare-scalers` -- CLI scaler comparison with ASCII plots
 
-```sh
-cargo run --example running-stats-demo
-```
-
-### `multi-stats-demo` -- direct aggregate stats
-
-Runs `MultiStats` directly on the bundled FluCoMa example WAV and prints all
-7 statistics across derivatives (with and without weights).
+Compares `Normalize`, `Standardize`, and `RobustScale` on outlier-heavy data
+using text-only strip plots (no extra dependencies).
 
 ```sh
-cargo run --example multi-stats-demo
+cargo run --example compare-scalers
+cargo run --example compare-scalers -- --n 60 --outlier 40
 ```
+
+### 👀 Interactive webapp: [Compare Scaling Strategies](https://script.google.com/macros/s/AKfycbyrQEv27Pp32W2lu1mCOy2gVAiCn8PldvwtJRdE2CSOS5m199JgskSoe-2FuSoYW9oF/exec)
 
 
 ## API Usage Examples
