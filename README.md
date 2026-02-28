@@ -67,7 +67,16 @@ cargo run --example compare-scalers
 cargo run --example compare-scalers -- --n 60 --outlier 40
 ```
 
-### 👀 Interactive webapp: [Compare Scaling Strategies](https://script.google.com/macros/s/AKfycbyrQEv27Pp32W2lu1mCOy2gVAiCn8PldvwtJRdE2CSOS5m199JgskSoe-2FuSoYW9oF/exec)
+### 👀 Interactive webapp: [Compare Scaling Strategies](https://script.google.com/macros/s/AKfycbyV-2a2ZVzknvBQ8u-90a3fYnIUXTGmde7vwvYtE1ey9GhNGOb2DD3fHYxiHYhUm4Q/exec)
+
+### `pca-scaler-demo` -- PCA across scaler choices
+
+Runs PCA with `None`, `Normalize`, `Standardize`, and `RobustScale`, printing
+explained variance and ASCII 2D projection plots for quick comparison.
+
+```sh
+cargo run --example pca-scaler-demo
+```
 
 
 ## API Usage Examples
