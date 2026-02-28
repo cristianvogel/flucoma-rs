@@ -10,6 +10,7 @@ mod mel_bands;
 mod novelty_seg;
 mod onset;
 mod onset_seg;
+mod running_stats;
 mod stft;
 mod transient_seg;
 
@@ -37,4 +38,5 @@ pub mod search {
 
 pub mod data {
     pub use super::bufstats::{BufStat, BufStats, BufStatsConfig, BufStatsOutput, BufStatsSelect};
+    pub use super::running_stats::RunningStats;
 }

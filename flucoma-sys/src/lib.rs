@@ -26,6 +26,7 @@ cpp! {{
     #include <flucoma/algorithms/public/AudioTransport.hpp>
     #include <flucoma/algorithms/public/KDTree.hpp>
     #include <flucoma/algorithms/public/MultiStats.hpp>
+    #include <flucoma/algorithms/public/RunningStats.hpp>
     using namespace fluid;
     using namespace fluid::algorithm;
 }}
@@ -799,6 +800,60 @@ pub fn multistats_process(
                 RealVectorView no_weights(nullptr, 0, 0);
                 ptr->process(in_v, out_v, outliers_cutoff, no_weights);
             }
+        })
+    }
+}
+
+// -------------------------------------------------------------------------------------------------
+// RunningStats
+
+pub fn running_stats_create() -> *mut u8 {
+    unsafe {
+        cpp!([] -> *mut u8 as "void*" {
+            return static_cast<void*>(new RunningStats());
+        })
+    }
+}
+
+pub fn running_stats_destroy(ptr: *mut u8) {
+    unsafe {
+        cpp!([ptr as "RunningStats*"] {
+            delete ptr;
+        })
+    }
+}
+
+pub fn running_stats_init(ptr: *mut u8, history_size: FlucomaIndex, input_size: FlucomaIndex) {
+    unsafe {
+        cpp!([
+            ptr as "RunningStats*",
+            history_size as "ptrdiff_t",
+            input_size as "ptrdiff_t"
+        ] {
+            ptr->init(history_size, input_size);
+        })
+    }
+}
+
+pub fn running_stats_process(
+    ptr: *mut u8,
+    input: *const f64,
+    input_len: FlucomaIndex,
+    mean_out: *mut f64,
+    stddev_out: *mut f64,
+) {
+    unsafe {
+        cpp!([
+            ptr as "RunningStats*",
+            input as "const double*",
+            input_len as "ptrdiff_t",
+            mean_out as "double*",
+            stddev_out as "double*"
+        ] {
+            FluidTensorView<double, 1> in_v(const_cast<double*>(input), 0, input_len);
+            FluidTensorView<double, 1> mean_v(mean_out, 0, input_len);
+            FluidTensorView<double, 1> std_v(stddev_out, 0, input_len);
+            ptr->process(in_v, mean_v, std_v);
         })
     }
 }
