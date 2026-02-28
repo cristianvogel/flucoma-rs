@@ -39,6 +39,14 @@ Morphs two audio files together using [optimal-transport](https://learn.flucoma.
 cargo run --example audio-transport -- input1.wav input2.wav output.wav
 ```
 
+### `kdtree-search` -- nearest-neighbour search
+
+Builds a 2D KDTree, inserts named points, and queries nearest neighbours for target vectors.
+
+```sh
+cargo run --example kdtree-search
+```
+
 
 ## API Usage Examples
 
@@ -116,6 +124,24 @@ audio_frame[512] = 1.0;
 let value = odf.process_frame(&audio_frame, OnsetFunction::PowerSpectrum, 5, 0);
 
 println!("Onset value: {:.4}", value);
+```
+
+### KDTree
+
+Indexes vectors by string ID and performs k-nearest-neighbour search.
+
+```rust,no_run
+use flucoma_rs::search::KDTree;
+
+let mut tree = KDTree::new(2);
+tree.add("origin", &[0.0, 0.0]);
+tree.add("right", &[10.0, 0.0]);
+tree.add("up", &[0.0, 10.0]);
+
+let result = tree.k_nearest(&[1.0, 1.0], 2);
+for (id, distance) in result.ids.iter().zip(result.distances.iter()) {
+    println!("{id}: {distance:.4}");
+}
 ```
 
 ## License
