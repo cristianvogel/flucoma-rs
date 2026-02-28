@@ -51,6 +51,6 @@ Scaler choice note: [Comparing Scalers](https://learn.flucoma.org/learn/comparin
 - [ ] [`KNNRegressor`](https://learn.flucoma.org/reference/knnregressor) -- K-Nearest Neighbour regressor
 - [ ] [`MLP`](https://learn.flucoma.org/reference/mlpclassifier) -- Multi-Layer Perceptron
 - [ ] [`SGD`](https://learn.flucoma.org/reference/mlpclassifier) -- Stochastic Gradient Descent optimiser (used by MLP)
-- [ ] [`PCA`](https://learn.flucoma.org/reference/pca) -- Principal Component Analysis
+- [x] [`PCA`](https://learn.flucoma.org/reference/pca) as `flucoma_rs::data::Pca` -- Principal Component Analysis with optional scaler preprocessing (`None`/`Normalize`/`Standardize`/`RobustScale`)
 - [ ] [`MDS`](https://learn.flucoma.org/reference/mds) -- Multidimensional Scaling
 - [ ] [`UMAP`](https://learn.flucoma.org/reference/umap) -- UMAP dimensionality reduction
