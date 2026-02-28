@@ -38,7 +38,7 @@
 - [x] [`BufStats`](https://learn.flucoma.org/reference/bufstats/) as `flucoma_rs::data::BufStats` -- offline buffer statistics with derivative stats, percentile control, selection mask, weights, and outlier cutoff
 - [x] [`MultiStats`](https://learn.flucoma.org/reference/stats) -- aggregate statistics (mean, std, min, max, ...) over a descriptor buffer
 - [x] [`RunningStats`](https://learn.flucoma.org/reference/stats) as `flucoma_rs::data::RunningStats` -- incremental running mean and sample standard deviation with resettable history
-- [ ] [`Normalization`](https://learn.flucoma.org/reference/normalize) -- min-max feature normalization
+- [x] [`Normalization`](https://learn.flucoma.org/reference/normalize) as `flucoma_rs::data::Normalize` -- min-max feature normalization with fit/transform/inverse-transform on dataset matrices
 - [ ] [`Standardization`](https://learn.flucoma.org/reference/standardize) -- Z-score standardization
 - [ ] [`RobustScaling`](https://learn.flucoma.org/reference/robustscale) -- robust (median/IQR) feature scaling
 - [ ] [`LabelSetEncoder`](https://learn.flucoma.org/reference/labelset) -- categorical label encoder

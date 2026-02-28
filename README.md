@@ -80,6 +80,15 @@ Runs `MultiStats` directly on the bundled FluCoMa example WAV and prints all
 cargo run --example multi-stats-demo
 ```
 
+### `normalize-demo` -- min-max normalization round-trip
+
+Normalizes a small row-major dataset matrix to `[0, 1]`, then inverse-transforms
+it back and reports reconstruction error.
+
+```sh
+cargo run --example normalize-demo
+```
+
 
 ## API Usage Examples
 

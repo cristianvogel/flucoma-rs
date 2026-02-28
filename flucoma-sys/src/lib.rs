@@ -26,6 +26,7 @@ cpp! {{
     #include <flucoma/algorithms/public/AudioTransport.hpp>
     #include <flucoma/algorithms/public/KDTree.hpp>
     #include <flucoma/algorithms/public/MultiStats.hpp>
+    #include <flucoma/algorithms/public/Normalization.hpp>
     #include <flucoma/algorithms/public/RunningStats.hpp>
     using namespace fluid;
     using namespace fluid::algorithm;
@@ -854,6 +855,77 @@ pub fn running_stats_process(
             FluidTensorView<double, 1> mean_v(mean_out, 0, input_len);
             FluidTensorView<double, 1> std_v(stddev_out, 0, input_len);
             ptr->process(in_v, mean_v, std_v);
+        })
+    }
+}
+
+// -------------------------------------------------------------------------------------------------
+// Normalization
+
+pub fn normalization_create() -> *mut u8 {
+    unsafe {
+        cpp!([] -> *mut u8 as "void*" {
+            return static_cast<void*>(new Normalization());
+        })
+    }
+}
+
+pub fn normalization_destroy(ptr: *mut u8) {
+    unsafe {
+        cpp!([ptr as "Normalization*"] {
+            delete ptr;
+        })
+    }
+}
+
+pub fn normalization_fit(
+    ptr: *mut u8,
+    min: f64,
+    max: f64,
+    input: *const f64,
+    rows: FlucomaIndex,
+    cols: FlucomaIndex,
+) {
+    unsafe {
+        cpp!([
+            ptr as "Normalization*",
+            min as "double", max as "double",
+            input as "const double*",
+            rows as "ptrdiff_t", cols as "ptrdiff_t"
+        ] {
+            FluidTensorView<double, 2> in_v(const_cast<double*>(input), 0, rows, cols);
+            ptr->init(min, max, in_v);
+        })
+    }
+}
+
+pub fn normalization_process(
+    ptr: *mut u8,
+    input: *const f64,
+    rows: FlucomaIndex,
+    cols: FlucomaIndex,
+    output: *mut f64,
+    inverse: bool,
+) {
+    unsafe {
+        cpp!([
+            ptr as "Normalization*",
+            input as "const double*",
+            rows as "ptrdiff_t", cols as "ptrdiff_t",
+            output as "double*",
+            inverse as "bool"
+        ] {
+            FluidTensorView<double, 2> in_v(const_cast<double*>(input), 0, rows, cols);
+            FluidTensorView<double, 2> out_v(output, 0, rows, cols);
+            ptr->process(in_v, out_v, inverse);
+        })
+    }
+}
+
+pub fn normalization_initialized(ptr: *mut u8) -> bool {
+    unsafe {
+        cpp!([ptr as "Normalization*"] -> bool as "bool" {
+            return ptr->initialized();
         })
     }
 }

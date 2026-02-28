@@ -8,6 +8,7 @@ mod kdtree;
 mod loudness;
 mod mel_bands;
 mod multi_stats;
+mod normalize;
 mod novelty_seg;
 mod onset;
 mod onset_seg;
@@ -40,5 +41,6 @@ pub mod search {
 pub mod data {
     pub use super::bufstats::{BufStat, BufStats, BufStatsConfig, BufStatsOutput, BufStatsSelect};
     pub use super::multi_stats::{MultiStats, MultiStatsConfig, MultiStatsOutput};
+    pub use super::normalize::Normalize;
     pub use super::running_stats::RunningStats;
 }
