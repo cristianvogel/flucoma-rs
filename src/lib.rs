@@ -10,6 +10,7 @@ mod onset;
 mod onset_seg;
 mod stft;
 mod transient_seg;
+mod kdtree;
 
 pub mod analyzation {
     pub use super::loudness::Loudness;
@@ -27,4 +28,8 @@ pub mod segmentation {
     pub use super::novelty_seg::NoveltySegmentation;
     pub use super::onset_seg::OnsetSegmentation;
     pub use super::transient_seg::TransientSegmentation;
+}
+
+pub mod search {
+    pub use super::kdtree::KDTree;
 }

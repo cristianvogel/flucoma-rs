@@ -25,6 +25,7 @@ cpp! {{
     #include <flucoma/algorithms/public/NoveltySegmentation.hpp>
     #include <flucoma/algorithms/public/TransientSegmentation.hpp>
     #include <flucoma/algorithms/public/AudioTransport.hpp>
+    #include <flucoma/algorithms/public/KDTree.hpp>
     using namespace fluid;
     using namespace fluid::algorithm;
 }}
@@ -655,3 +656,70 @@ pub fn audio_transport_process_frame(
         })
     }
 }
+
+// -------------------------------------------------------------------------------------------------
+// KDTree
+
+pub fn kdtree_create(dims: FlucomaIndex) -> *mut u8 {
+    unsafe {
+        cpp!([dims as "ptrdiff_t"] -> *mut u8 as "void*" {
+            // Construct from an empty DataSet so KDTree dimensions are initialized.
+            KDTree::DataSet dataSet(dims);
+            return static_cast<void*>(new KDTree(dataSet));
+        })
+    }
+}
+
+pub fn kdtree_destroy(ptr: *mut u8) {
+    unsafe {
+        cpp!([ptr as "KDTree*"] {
+            delete ptr;
+        })
+    }
+}
+
+pub fn kdtree_add_node(ptr: *mut u8, id: *const u8, data: *const f64, len: FlucomaIndex) {
+    unsafe {
+        cpp!([ptr as "KDTree*", id as "const char*", data as "const double*", len as "ptrdiff_t"] {
+            FluidTensorView<double, 1> data_v(const_cast<double*>(data), 0, len);
+            // Rebuild from DataSet because KDTree::addNode currently uses
+            // invalid shared_ptr ownership internally.
+            auto flat = ptr->toFlat();
+            KDTree::DataSet dataSet(flat.ids, flat.data);
+            dataSet.add(std::string(id), data_v);
+            *ptr = KDTree(dataSet);
+        })
+    }
+}
+
+/// Simple kNearest binding.
+/// Returns distances and IDs.
+/// To return IDs, we'll pass a buffer of pointers to C strings.
+pub fn kdtree_k_nearest(
+    ptr: *mut u8,
+    input: *const f64,
+    input_len: FlucomaIndex,
+    k: FlucomaIndex,
+    radius: f64,
+    out_distances: *mut f64,
+    out_ids: *mut *const u8,
+) {
+    unsafe {
+        cpp!([
+            ptr as "KDTree*",
+            input as "const double*", input_len as "ptrdiff_t",
+            k as "ptrdiff_t", radius as "double",
+            out_distances as "double*",
+            out_ids as "const char**"
+        ] {
+            FluidTensorView<double, 1> in_v(const_cast<double*>(input), 0, input_len);
+            Allocator alloc{};
+            auto result = ptr->kNearest(in_v, k, radius, alloc);
+            for(fluid::index i = 0; i < static_cast<fluid::index>(result.first.size()); ++i) {
+                out_distances[i] = result.first[i];
+                out_ids[i] = result.second[i]->c_str();
+            }
+        })
+    }
+}
+

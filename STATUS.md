@@ -41,7 +41,7 @@
 - [ ] [`Standardization`](https://learn.flucoma.org/reference/standardize) -- Z-score standardization
 - [ ] [`RobustScaling`](https://learn.flucoma.org/reference/robustscale) -- robust (median/IQR) feature scaling
 - [ ] [`LabelSetEncoder`](https://learn.flucoma.org/reference/labelset) -- categorical label encoder
-- [ ] [`KDTree`](https://learn.flucoma.org/reference/kdtree) -- K-D Tree for nearest-neighbour search
+- [x] [`KDTree`](https://learn.flucoma.org/reference/kdtree) as `flucoma_rs::search::KDTree` -- K-D Tree for nearest-neighbour search
 - [ ] [`KMeans`](https://learn.flucoma.org/reference/kmeans) -- K-Means clustering
 - [ ] [`SKMeans`](https://learn.flucoma.org/reference/skmeans) -- Spherical K-Means clustering
 - [ ] [`KNNClassifier`](https://learn.flucoma.org/reference/knnclassifier) -- K-Nearest Neighbour classifier
