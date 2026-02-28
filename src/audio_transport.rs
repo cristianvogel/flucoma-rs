@@ -173,6 +173,9 @@ mod tests {
         assert_eq!(wsq1.len(), win);
         let energy1: f64 = audio1.iter().map(|x| x * x).sum();
 
-        assert!(energy0 > 0.0 || energy1 > 0.0, "at least one output should have energy");
+        assert!(
+            energy0 > 0.0 || energy1 > 0.0,
+            "at least one output should have energy"
+        );
     }
 }
