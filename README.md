@@ -16,7 +16,13 @@ See [EXTEND.md](./EXTEND.md) on how to create new wrappers. Pull requests are we
 
 - Rust toolchain (stable)
 - C++17 compatible compiler (MSVC, clang++, or g++)
-- CMake (used to fetch and build Eigen, HISSTools, Spectra, and foonathan/memory)
+- CMake (used to fetch and build Eigen, HISSTools, Spectra, foonathan/memory, and fmt)
+
+Build note: `flucoma-sys` configures CMake with `FETCHCONTENT_UPDATES_DISCONNECTED=ON`, so
+existing dependencies are not updated from the network during normal rebuilds. A first build on
+a fresh machine still needs network access (or pre-populated CMake FetchContent sources).
+For fully offline CI, `flucoma-sys` also supports `FLUCOMA_FULLY_DISCONNECTED=1` plus local
+dependency path overrides (`FLUCOMA_*_PATH` variables; see `flucoma-sys/README.md`).
 
 
 ## CLI Examples
