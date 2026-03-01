@@ -45,12 +45,14 @@ Scaler choice note: [Comparing Scalers](https://learn.flucoma.org/learn/comparin
 - [ ] [`RobustScaling`](https://learn.flucoma.org/reference/robustscale) -- robust (median/IQR) feature scaling
 - [ ] [`LabelSetEncoder`](https://learn.flucoma.org/reference/labelset) -- categorical label encoder
 - [x] [`KDTree`](https://learn.flucoma.org/reference/kdtree) as `flucoma_rs::search::KDTree` -- K-D Tree for nearest-neighbour search
-- [ ] [`KMeans`](https://learn.flucoma.org/reference/kmeans) -- K-Means clustering
-- [ ] [`SKMeans`](https://learn.flucoma.org/reference/skmeans) -- Spherical K-Means clustering
+- [x] [`KMeans`](https://learn.flucoma.org/reference/kmeans) as `flucoma_rs::data::KMeans` -- fixed-k centroid clustering with selectable initialization strategies
+- [x] [`SKMeans`](https://learn.flucoma.org/reference/skmeans) as `flucoma_rs::data::SKMeans` -- spherical k-means plus encoding output for redistribution workflows
+- [x] [`Grid`](https://learn.flucoma.org/reference/grid) as `flucoma_rs::data::Grid` -- structure-aware redistribution of 2D points to grid coordinates
+- [x] [`DataSetQuery`](https://learn.flucoma.org/reference/datasetquery) as `flucoma_rs::data::DataSetQuery` -- dataset filtering + column projection with source index mapping
 - [ ] [`KNNClassifier`](https://learn.flucoma.org/reference/knnclassifier) -- K-Nearest Neighbour classifier
 - [ ] [`KNNRegressor`](https://learn.flucoma.org/reference/knnregressor) -- K-Nearest Neighbour regressor
 - [ ] [`MLP`](https://learn.flucoma.org/reference/mlpclassifier) -- Multi-Layer Perceptron
 - [ ] [`SGD`](https://learn.flucoma.org/reference/mlpclassifier) -- Stochastic Gradient Descent optimiser (used by MLP)
 - [x] [`PCA`](https://learn.flucoma.org/reference/pca) as `flucoma_rs::data::Pca` -- Principal Component Analysis with optional scaler preprocessing (`None`/`Normalize`/`Standardize`/`RobustScale`)
-- [ ] [`MDS`](https://learn.flucoma.org/reference/mds) -- Multidimensional Scaling
+- [x] [`MDS`](https://learn.flucoma.org/reference/mds) as `flucoma_rs::data::Mds` -- metric-based dimensionality reduction preserving pairwise distance structure
 - [ ] [`UMAP`](https://learn.flucoma.org/reference/umap) -- UMAP dimensionality reduction

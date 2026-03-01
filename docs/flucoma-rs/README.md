@@ -43,6 +43,11 @@ These archival summaries are included here for educational continuity and poster
 ## data
 
 - [BufStats](./bufstats.md)
+- [KMeans](./kmeans.md)
+- [SKMeans](./skmeans.md)
+- [Grid](./grid.md)
+- [DataSetQuery](./dataset_query.md)
+- [Mds](./mds.md)
 - [MultiStats](./multistats.md)
 - [Normalize](./normalize.md)
 - [Standardize](./standardize.md)

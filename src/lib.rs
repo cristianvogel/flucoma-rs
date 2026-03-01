@@ -3,10 +3,14 @@
 
 mod audio_transport;
 mod bufstats;
+mod dataset_query;
 mod envelope_seg;
+mod grid;
 mod kdtree;
+mod kmeans;
 mod loudness;
 mod mel_bands;
+mod mds;
 mod multi_stats;
 mod normalize;
 mod novelty_seg;
@@ -43,6 +47,12 @@ pub mod search {
 
 pub mod data {
     pub use super::bufstats::{BufStat, BufStats, BufStatsConfig, BufStatsOutput, BufStatsSelect};
+    pub use super::dataset_query::{
+        ComparisonOp, DataSetQuery, DataSetQueryResult, QueryCondition,
+    };
+    pub use super::grid::Grid;
+    pub use super::kmeans::{KMeans, KMeansConfig, KMeansInit, KMeansResult, SKMeans};
+    pub use super::mds::{Mds, MdsDistance};
     pub use super::multi_stats::{MultiStats, MultiStatsConfig, MultiStatsOutput};
     pub use super::normalize::Normalize;
     pub use super::pca::{Pca, PcaConfig, PcaScaler};
