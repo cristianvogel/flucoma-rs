@@ -55,7 +55,7 @@ impl OnsetDetectionFunctions {
     /// * `window_size`  - Analysis window size in samples.
     /// * `fft_size`     - FFT size (must be >= `window_size`).
     /// * `filter_size`  - Median filter size for background subtraction
-    ///                    (use 0 or 1 to disable, minimum effective value is 3).
+    ///   (use 0 or 1 to disable, minimum effective value is 3).
     ///
     /// # Errors
     /// Returns an error string if parameters are invalid.
@@ -92,8 +92,8 @@ impl OnsetDetectionFunctions {
     ///
     /// # Arguments
     /// * `input`       - Audio samples. For `frame_delta == 0`, length must be
-    ///     at least `window_size`. For `frame_delta > 0`, length
-    ///     must be at least `window_size + frame_delta`.
+    ///   at least `window_size`. For `frame_delta > 0`, length
+    ///   must be at least `window_size + frame_delta`.
     /// * `function`    - Detection function to compute.
     /// * `filter_size` - Median filter size for this frame (0 to disable).
     /// * `frame_delta` - History offset in samples (0 for most functions).

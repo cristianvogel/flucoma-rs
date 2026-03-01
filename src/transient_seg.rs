@@ -46,15 +46,16 @@ impl TransientSegmentation {
         if pad_size <= order {
             return Err("pad_size must be > order");
         }
-        let inner = transient_seg_create(
+        let inner = transient_seg_create(order as isize, block_size as isize, pad_size as isize);
+        if inner.is_null() {
+            return Err("failed to create TransientSegmentation instance");
+        }
+        transient_seg_init(
+            inner,
             order as isize,
             block_size as isize,
             pad_size as isize,
         );
-        if inner.is_null() {
-            return Err("failed to create TransientSegmentation instance");
-        }
-        transient_seg_init(inner, order as isize, block_size as isize, pad_size as isize);
         let hop_size = transient_seg_hop_size(inner) as usize;
         let input_size = transient_seg_input_size(inner) as usize;
         Ok(Self {
@@ -152,7 +153,10 @@ mod tests {
         let out = seg.process(&input);
         assert_eq!(out.len(), seg.hop_size());
         for (i, &v) in out.iter().enumerate() {
-            assert!(v == 0.0 || v == 1.0, "sample {i}: expected 0.0 or 1.0, got {v}");
+            assert!(
+                v == 0.0 || v == 1.0,
+                "sample {i}: expected 0.0 or 1.0, got {v}"
+            );
         }
     }
 
@@ -170,7 +174,10 @@ mod tests {
         assert_eq!(out.len(), seg.hop_size());
         // At minimum the output must be valid 0/1 values
         for (i, &v) in out.iter().enumerate() {
-            assert!(v == 0.0 || v == 1.0, "sample {i}: expected 0.0 or 1.0, got {v}");
+            assert!(
+                v == 0.0 || v == 1.0,
+                "sample {i}: expected 0.0 or 1.0, got {v}"
+            );
         }
     }
 }

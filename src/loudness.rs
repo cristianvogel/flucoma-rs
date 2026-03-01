@@ -51,7 +51,7 @@ impl Loudness {
     /// * `input`      - Audio samples; must have exactly `frame_size` elements.
     /// * `k_weighting` - Apply K-weighting filter (as per EBU R128).
     /// * `true_peak`  - Use true peak detection (interpolated); otherwise
-    ///                  reports the absolute maximum sample.
+    ///   reports the absolute maximum sample.
     ///
     /// # Panics
     /// Panics if `input.len() != frame_size`.
