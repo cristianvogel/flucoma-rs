@@ -14,8 +14,7 @@ use std::path::Path;
 use flucoma_rs::data::{BufStat, BufStats, BufStatsConfig, BufStatsSelect};
 use wavers::Wav;
 
-const DEFAULT_INPUT: &str =
-    "vendor/flucoma-core/Resources/AudioFiles/Tremblay-AaS-AcousticStrums-M.wav";
+const DEFAULT_INPUT: &str = "resources/audio_files/RN_808Beat_115.wav";
 
 fn main() -> Result<(), Box<dyn Error>> {
     let input_path = std::env::args()

@@ -12,7 +12,7 @@ use flucoma_rs::data::{MultiStats, MultiStatsConfig};
 use wavers::Wav;
 
 const DEFAULT_INPUT: &str =
-    "vendor/flucoma-core/Resources/AudioFiles/Tremblay-AaS-AcousticStrums-M.wav";
+    "resources/audio_files/RN_808Beat_115.wav";
 const STATS_LABELS: [&str; 7] = ["mean", "std", "skew", "kurt", "low", "mid", "high"];
 
 fn main() -> Result<(), Box<dyn Error>> {
