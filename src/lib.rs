@@ -30,7 +30,7 @@ pub mod analyzation {
     pub use super::stft::{ComplexSpectrum, Istft, Stft, WindowType};
 }
 
-pub mod decomposition {
+pub mod transformation {
     pub use super::audio_transport::AudioTransport;
 }
 
