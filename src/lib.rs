@@ -21,6 +21,7 @@ mod robust_scale;
 mod running_stats;
 mod standardize;
 mod stft;
+mod tempo;
 mod transient_seg;
 
 pub mod analyzation {
@@ -28,6 +29,9 @@ pub mod analyzation {
     pub use super::mel_bands::MelBands;
     pub use super::onset::{OnsetDetectionFunctions, OnsetFunction};
     pub use super::stft::{ComplexSpectrum, Istft, Stft, WindowType};
+    pub use super::tempo::{
+        TempoAlternative, TempoConfig, TempoEstimate, TempoEstimator, TempoOnsetMetrics,
+    };
 }
 
 pub mod decomposition {
