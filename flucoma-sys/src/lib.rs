@@ -15,6 +15,7 @@ pub type FlucomaIndex = isize;
 cpp! {{
     #define FMT_HEADER_ONLY 1
     #include <complex>
+    #include <flucoma/data/FluidMemory.hpp>
     #include <flucoma/algorithms/public/Loudness.hpp>
     #include <flucoma/algorithms/public/STFT.hpp>
     #include <flucoma/algorithms/public/MelBands.hpp>
@@ -235,8 +236,7 @@ pub fn melbands_process_frame(
         ] {
             FluidTensorView<double, 1> in_v(const_cast<double*>(input), 0, input_len);
             FluidTensorView<double, 1> out_v(output, 0, output_len);
-            Allocator alloc{};
-            ptr->processFrame(in_v, out_v, mag_norm, use_power, log_output, alloc);
+            ptr->processFrame(in_v, out_v, mag_norm, use_power, log_output, FluidDefaultAllocator());
         })
     }
 }
@@ -247,8 +247,7 @@ pub fn melbands_process_frame(
 pub fn audio_transport_create(max_fft_size: FlucomaIndex) -> *mut u8 {
     unsafe {
         cpp!([max_fft_size as "ptrdiff_t"] -> *mut u8 as "void*" {
-            Allocator alloc{};
-            return static_cast<void*>(new AudioTransport(max_fft_size, alloc));
+            return static_cast<void*>(new AudioTransport(max_fft_size, FluidDefaultAllocator()));
         })
     }
 }
@@ -296,8 +295,7 @@ pub fn audio_transport_process_frame(
             FluidTensorView<double, 1> in1_v(const_cast<double*>(in1), 0, frame_len);
             FluidTensorView<double, 1> in2_v(const_cast<double*>(in2), 0, frame_len);
             FluidTensorView<double, 2> out_v(output, 0, 2, frame_len);
-            Allocator alloc{};
-            ptr->processFrame(in1_v, in2_v, weight, out_v, alloc);
+            ptr->processFrame(in1_v, in2_v, weight, out_v, FluidDefaultAllocator());
         })
     }
 }
@@ -379,8 +377,7 @@ pub fn nmf_process_frame(
             FluidTensorView<double, 2> w_v(const_cast<double*>(bases), 0, bases_rows, bases_cols);
             FluidTensorView<double, 1> out_v(output, 0, bases_rows);
             FluidTensorView<double, 1> est_v(estimate, 0, input_len);
-            Allocator alloc{};
-            ptr->processFrame(x_v, w_v, out_v, n_iterations, est_v, random_seed, alloc);
+            ptr->processFrame(x_v, w_v, out_v, n_iterations, est_v, random_seed, FluidDefaultAllocator());
         })
     }
 }
@@ -391,8 +388,7 @@ pub fn nmf_process_frame(
 pub fn nmf_morph_create(max_fft_size: FlucomaIndex) -> *mut u8 {
     unsafe {
         cpp!([max_fft_size as "ptrdiff_t"] -> *mut u8 as "void*" {
-            Allocator alloc{};
-            return static_cast<void*>(new NMFMorph(max_fft_size, alloc));
+            return static_cast<void*>(new NMFMorph(max_fft_size, FluidDefaultAllocator()));
         })
     }
 }
@@ -434,8 +430,7 @@ pub fn nmf_morph_init(
             FluidTensorView<double, 2> w1_v(const_cast<double*>(w1), 0, w1_rows, w1_cols);
             FluidTensorView<double, 2> w2_v(const_cast<double*>(w2), 0, w2_rows, w2_cols);
             FluidTensorView<double, 2> h_v (const_cast<double*>(h),  0, h_rows,  h_cols);
-            Allocator alloc{};
-            ptr->init(w1_v, w2_v, h_v, win_size, fft_size, hop_size, assign, alloc);
+            ptr->init(w1_v, w2_v, h_v, win_size, fft_size, hop_size, assign, FluidDefaultAllocator());
         })
     }
 }
@@ -456,8 +451,7 @@ pub fn nmf_morph_process_frame(
         ] {
             auto* cptr = reinterpret_cast<std::complex<double>*>(out_complex);
             FluidTensorView<std::complex<double>, 1> v(cptr, 0, num_bins);
-            Allocator alloc{};
-            ptr->processFrame(v, interpolation, seed, alloc);
+            ptr->processFrame(v, interpolation, seed, FluidDefaultAllocator());
         })
     }
 }
@@ -468,9 +462,8 @@ pub fn nmf_morph_process_frame(
 pub fn onset_create(max_size: FlucomaIndex, max_filter_size: FlucomaIndex) -> *mut u8 {
     unsafe {
         cpp!([max_size as "ptrdiff_t", max_filter_size as "ptrdiff_t"] -> *mut u8 as "void*" {
-            Allocator alloc{};
             return static_cast<void*>(
-                new OnsetDetectionFunctions(max_size, max_filter_size, alloc));
+                new OnsetDetectionFunctions(max_size, max_filter_size, FluidDefaultAllocator()));
         })
     }
 }
@@ -514,8 +507,7 @@ pub fn onset_process_frame(
             function as "ptrdiff_t", filter_size as "ptrdiff_t", frame_delta as "ptrdiff_t"
         ] -> f64 as "double" {
             FluidTensorView<double, 1> in_v(const_cast<double*>(input), 0, input_len);
-            Allocator alloc{};
-            return ptr->processFrame(in_v, function, filter_size, frame_delta, alloc);
+            return ptr->processFrame(in_v, function, filter_size, frame_delta, FluidDefaultAllocator());
         })
     }
 }
@@ -526,9 +518,8 @@ pub fn onset_process_frame(
 pub fn onset_seg_create(max_size: FlucomaIndex, max_filter_size: FlucomaIndex) -> *mut u8 {
     unsafe {
         cpp!([max_size as "ptrdiff_t", max_filter_size as "ptrdiff_t"] -> *mut u8 as "void*" {
-            Allocator alloc{};
             return static_cast<void*>(
-                new OnsetSegmentation(max_size, max_filter_size, alloc));
+                new OnsetSegmentation(max_size, max_filter_size, FluidDefaultAllocator()));
         })
     }
 }
@@ -575,8 +566,7 @@ pub fn onset_seg_process_frame(
             threshold as "double", debounce as "ptrdiff_t", frame_delta as "ptrdiff_t"
         ] -> f64 as "double" {
             FluidTensorView<double, 1> in_v(const_cast<double*>(input), 0, input_len);
-            Allocator alloc{};
-            return ptr->processFrame(in_v, function, filter_size, threshold, debounce, frame_delta, alloc);
+            return ptr->processFrame(in_v, function, filter_size, threshold, debounce, frame_delta, FluidDefaultAllocator());
         })
     }
 }
@@ -653,9 +643,8 @@ pub fn novelty_seg_create(
         cpp!([
             max_kernel_size as "ptrdiff_t", max_dims as "ptrdiff_t", max_filter_size as "ptrdiff_t"
         ] -> *mut u8 as "void*" {
-            Allocator alloc{};
             return static_cast<void*>(
-                new NoveltySegmentation(max_kernel_size, max_dims, max_filter_size, alloc));
+                new NoveltySegmentation(max_kernel_size, max_dims, max_filter_size, FluidDefaultAllocator()));
         })
     }
 }
@@ -679,8 +668,7 @@ pub fn novelty_seg_init(
             ptr as "NoveltySegmentation*",
             kernel_size as "ptrdiff_t", filter_size as "ptrdiff_t", n_dims as "ptrdiff_t"
         ] {
-            Allocator alloc{};
-            ptr->init(kernel_size, filter_size, n_dims, alloc);
+            ptr->init(kernel_size, filter_size, n_dims, FluidDefaultAllocator());
         })
     }
 }
@@ -699,8 +687,7 @@ pub fn novelty_seg_process_frame(
             threshold as "double", min_slice_length as "ptrdiff_t"
         ] -> f64 as "double" {
             FluidTensorView<double, 1> in_v(const_cast<double*>(input), 0, input_len);
-            Allocator alloc{};
-            return ptr->processFrame(in_v, threshold, min_slice_length, alloc);
+            return ptr->processFrame(in_v, threshold, min_slice_length, FluidDefaultAllocator());
         })
     }
 }
@@ -717,9 +704,8 @@ pub fn transient_seg_create(
         cpp!([
             max_order as "ptrdiff_t", max_block_size as "ptrdiff_t", max_pad_size as "ptrdiff_t"
         ] -> *mut u8 as "void*" {
-            Allocator alloc{};
             return static_cast<void*>(
-                new TransientSegmentation(max_order, max_block_size, max_pad_size, alloc));
+                new TransientSegmentation(max_order, max_block_size, max_pad_size, FluidDefaultAllocator()));
         })
     }
 }
@@ -783,8 +769,7 @@ pub fn transient_seg_process(
         ] {
             FluidTensorView<double, 1> in_v(const_cast<double*>(input), 0, input_len);
             FluidTensorView<double, 1> out_v(output, 0, output_len);
-            Allocator alloc{};
-            ptr->process(in_v, out_v, alloc);
+            ptr->process(in_v, out_v, FluidDefaultAllocator());
         })
     }
 }

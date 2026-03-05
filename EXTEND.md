@@ -13,7 +13,7 @@ Check three things:
 
 ## Add `flucoma-sys` bindings
 
-Add the `#include` to the global `cpp! {{ }}` block, then add `create`, `destroy`, (optionally `init`), and `process_frame` functions. Use existing bindings as templates -- `Loudness` is the simplest, `OnsetDetectionFunctions` covers the allocator + constructor-params case.
+Add the `#include` to the global `cpp! {{ }}` block, then add `create`, `destroy`, (optionally `init`), and `process_frame` functions. Use existing bindings as templates -- `Loudness` is the simplest, `Onset` covers the allocator + constructor-params case. No function comments are needed here.
 
 ### cpp! type mapping
 
@@ -26,9 +26,9 @@ Add the `#include` to the global `cpp! {{ }}` block, then add `create`, `destroy
 | `*mut f64` | `"double*"` | output buffers |
 | `*mut u8` | `"ClassName*"` | opaque handle |
 
-### Allocator rule
+### Allocator
 
-If the C++ signature includes `Allocator& alloc`, add `Allocator alloc{};` inside the `cpp!` block and pass it.
+If the C++ signature includes `Allocator& alloc`, pass `FluidDefaultAllocator()` inside the `cpp!` as argument.
 
 ## Create `src/<name>.rs`
 
@@ -40,7 +40,9 @@ Use `src/loudness.rs` (has `init()`) or `src/onset.rs` (constructor params, no `
 - `process_frame()` with `assert!` on input lengths
 - `Drop` calling `destroy`
 - `#[cfg(test)] mod tests` with at least one silence/zero-input test
-
+- Ensure the struct and all public functions are commented properly
+- Add links to existing FluCoMa reference pages to structs (see STATUS.md for the links)
+ 
 ## Wire up
 
 - Add `mod <name>;` and a `pub use` re-export in `src/lib.rs`
