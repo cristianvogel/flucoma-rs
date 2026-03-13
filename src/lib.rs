@@ -50,10 +50,15 @@ mod amp_feature;
 mod amp_seg;
 mod audio_transport;
 mod hpss;
+mod dataset_query;
+mod grid;
+mod kdtree;
+mod kmeans;
 mod loudness;
 mod matrix;
 mod mel_bands;
 mod nmf;
+mod mds;
 mod nmf_filter;
 mod nmf_morph;
 mod novelty_feature;
@@ -68,7 +73,13 @@ mod transient_seg;
 
 /// Raw data processing and helper types.
 pub mod data {
+    pub use super::dataset_query::{
+        ComparisonOp, DataSetQuery, DataSetQueryResult, QueryCondition,
+    };
+    pub use super::grid::Grid;
+    pub use super::kmeans::{KMeans, KMeansConfig, KMeansInit, KMeansResult, SKMeans};
     pub use super::matrix::Matrix;
+    pub use super::mds::{Mds, MdsDistance};
 }
 
 /// Fast Fourier transform types and functions.
@@ -109,4 +120,8 @@ pub mod segmentation {
     pub use super::novelty_seg::NoveltySlice;
     pub use super::onset_seg::OnsetSlice;
     pub use super::transient_seg::TransientSlice;
+}
+
+pub mod search {
+    pub use super::kdtree::KDTree;
 }
