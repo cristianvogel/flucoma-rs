@@ -339,28 +339,23 @@ pub fn audio_transport_process_frame(
     ptr: *mut u8,
     in1: *const f64,
     in2: *const f64,
-    num_frames: FlucomaIndex,
-    interpolation: f64,
+    frame_len: FlucomaIndex,
+    weight: f64,
     output: *mut f64,
 ) {
     unsafe {
         cpp!([
             ptr as "AudioTransport*",
-            in1 as "const double*",
-            in2 as "const double*",
-            num_frames as "ptrdiff_t",
-            interpolation as "double",
+            in1 as "const double*", in2 as "const double*",
+            frame_len as "ptrdiff_t",
+            weight as "double",
             output as "double*"
         ] {
-            RealVector v1(num_frames);
-            RealVector v2(num_frames);
-            std::copy(in1, in1 + num_frames, v1.data());
-            std::copy(in2, in2 + num_frames, v2.data());
-            RealMatrix out(2, num_frames);
             auto& alloc = FluidDefaultAllocator();
-            ptr->processFrame(v1, v2, interpolation, out, alloc);
-            std::copy(out.data(), out.data() + num_frames, output);
-            std::copy(out.data() + num_frames, out.data() + num_frames * 2, output + num_frames);
+            FluidTensorView<double, 1> in1_v(const_cast<double*>(in1), 0, frame_len);
+            FluidTensorView<double, 1> in2_v(const_cast<double*>(in2), 0, frame_len);
+            FluidTensorView<double, 2> out_v(output, 0, 2, frame_len);
+            ptr->processFrame(in1_v, in2_v, weight, out_v, alloc);
         })
     }
 }
