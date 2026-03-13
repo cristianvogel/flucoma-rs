@@ -56,11 +56,15 @@ mod mel_bands;
 mod nmf;
 mod nmf_filter;
 mod nmf_morph;
+mod normalize;
 mod novelty_feature;
 mod novelty_seg;
 mod onset;
 mod onset_seg;
+mod pca;
+mod robust_scale;
 mod sine;
+mod standardize;
 mod sine_extraction;
 mod stft;
 mod transient_extraction;
@@ -69,6 +73,10 @@ mod transient_seg;
 /// Raw data processing and helper types.
 pub mod data {
     pub use super::matrix::Matrix;
+    pub use super::normalize::Normalize;
+    pub use super::pca::{Pca, PcaConfig, PcaScaler};
+    pub use super::robust_scale::RobustScale;
+    pub use super::standardize::Standardize;
 }
 
 /// Fast Fourier transform types and functions.
