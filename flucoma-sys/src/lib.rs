@@ -228,11 +228,12 @@ pub fn istft_process_frame(
             in_complex as "const double*", num_bins as "ptrdiff_t",
             output as "double*", output_len as "ptrdiff_t"
         ] {
+            using namespace Eigen;
             auto* cptr = reinterpret_cast<std::complex<double>*>(
                 const_cast<double*>(in_complex));
-            FluidTensorView<std::complex<double>, 1> in_v(cptr, 0, num_bins);
-            FluidTensorView<double, 1> out_v(output, 0, output_len);
-            ptr->processFrame(in_v, out_v);
+            Map<ArrayXcd> in_m(cptr, num_bins);
+            Map<ArrayXd> out_m(output, output_len);
+            ptr->processFrame(in_m, out_m);
         })
     }
 }
@@ -573,7 +574,7 @@ pub fn onset_process_frame(
 }
 
 // -------------------------------------------------------------------------------------------------
-// OnsetSegmentation
+// OnsetSlice
 
 pub fn onset_seg_create(max_size: FlucomaIndex, max_filter_size: FlucomaIndex) -> *mut u8 {
     unsafe {
@@ -632,7 +633,7 @@ pub fn onset_seg_process_frame(
 }
 
 // -------------------------------------------------------------------------------------------------
-// AmpSegmentation
+// AmpSlice
 
 pub fn amp_seg_create() -> *mut u8 {
     unsafe {
@@ -692,7 +693,7 @@ pub fn amp_seg_process_sample(
 }
 
 // -------------------------------------------------------------------------------------------------
-// NoveltySegmentation
+// NoveltySlice
 
 pub fn novelty_seg_create(
     max_kernel_size: FlucomaIndex,
@@ -869,7 +870,7 @@ pub fn sine_process_frame(
 }
 
 // -------------------------------------------------------------------------------------------------
-// TransientSegmentation
+// TransientSlice
 
 pub fn transient_seg_create(
     max_order: FlucomaIndex,
