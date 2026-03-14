@@ -50,10 +50,15 @@ mod amp_feature;
 mod amp_seg;
 mod audio_transport;
 mod bufstats;
+mod dataset_query;
+mod grid;
 mod hpss;
+mod kdtree;
+mod kmeans;
 mod loudness;
 mod matrix;
 mod mel_bands;
+mod mds;
 mod multi_stats;
 mod nmf;
 mod nmf_filter;
@@ -76,7 +81,13 @@ mod transient_seg;
 /// Raw data processing and helper types.
 pub mod data {
     pub use super::bufstats::{BufStats, BufStatsConfig};
+    pub use super::dataset_query::{
+        ComparisonOp, DataSetQuery, DataSetQueryResult, QueryCondition,
+    };
+    pub use super::grid::Grid;
+    pub use super::kmeans::{KMeans, KMeansConfig, KMeansInit, KMeansResult, SKMeans};
     pub use super::matrix::Matrix;
+    pub use super::mds::{Mds, MdsDistance};
     pub use super::multi_stats::{
         MultiStats, MultiStatsConfig, MultiStatsOutput, MultiStatsValues,
     };
@@ -125,4 +136,8 @@ pub mod segmentation {
     pub use super::novelty_seg::NoveltySlice;
     pub use super::onset_seg::OnsetSlice;
     pub use super::transient_seg::TransientSlice;
+}
+
+pub mod search {
+    pub use super::kdtree::KDTree;
 }
