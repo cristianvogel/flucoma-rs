@@ -76,6 +76,7 @@ mod standardize;
 mod sine_extraction;
 mod stft;
 mod transient_extraction;
+mod tempo;
 mod transient_seg;
 
 /// Raw data processing and helper types.
@@ -112,6 +113,9 @@ pub mod analyzation {
     pub use super::novelty_feature::Novelty;
     pub use super::onset::{Onset, OnsetFunction};
     pub use super::sine::{Sine, SortBy};
+    pub use super::tempo::{
+        TempoAlternative, TempoConfig, TempoEstimate, TempoEstimator, TempoOnsetMetrics,
+    };
 }
 
 /// Spectral transformation.
