@@ -317,7 +317,8 @@ pub fn melbands_process_frame(
 pub fn audio_transport_create(max_fft_size: FlucomaIndex) -> *mut u8 {
     unsafe {
         cpp!([max_fft_size as "ptrdiff_t"] -> *mut u8 as "void*" {
-            return static_cast<void*>(new AudioTransport(max_fft_size, FluidDefaultAllocator()));
+            auto& alloc = FluidDefaultAllocator();
+            return static_cast<void*>(new AudioTransport(max_fft_size, alloc));
         })
     }
 }
@@ -362,10 +363,11 @@ pub fn audio_transport_process_frame(
             weight as "double",
             output as "double*"
         ] {
+            auto& alloc = FluidDefaultAllocator();
             FluidTensorView<double, 1> in1_v(const_cast<double*>(in1), 0, frame_len);
             FluidTensorView<double, 1> in2_v(const_cast<double*>(in2), 0, frame_len);
             FluidTensorView<double, 2> out_v(output, 0, 2, frame_len);
-            ptr->processFrame(in1_v, in2_v, weight, out_v, FluidDefaultAllocator());
+            ptr->processFrame(in1_v, in2_v, weight, out_v, alloc);
         })
     }
 }
