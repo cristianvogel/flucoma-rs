@@ -41,9 +41,9 @@
 - [X] [`MultiStats`](https://learn.flucoma.org/reference/stats) -- aggregate statistics (mean, std, min, max, ...) over a descriptor buffer
 - [X] [`RunningStats`](https://learn.flucoma.org/reference/stats) -- incremental running statistics
 - [X] [`BufStats`](https://learn.flucoma.org/reference/stats) -- statistics over a selected region of a multichannel buffer
-- [ ] [`Normalization`](https://learn.flucoma.org/reference/normalize) -- min-max feature normalization
-- [ ] [`Standardization`](https://learn.flucoma.org/reference/standardize) -- Z-score standardization
-- [ ] [`RobustScaling`](https://learn.flucoma.org/reference/robustscale) -- robust (median/IQR) feature scaling
+- [X] [`Normalization`](https://learn.flucoma.org/reference/normalize) -- min-max feature normalization
+- [X] [`Standardization`](https://learn.flucoma.org/reference/standardize) -- Z-score standardization
+- [X] [`RobustScaling`](https://learn.flucoma.org/reference/robustscale) -- robust (median/IQR) feature scaling
 - [ ] [`LabelSetEncoder`](https://learn.flucoma.org/reference/labelset) -- categorical label encoder
 - [ ] [`KDTree`](https://learn.flucoma.org/reference/kdtree) -- K-D Tree for nearest-neighbour search
 - [ ] [`KMeans`](https://learn.flucoma.org/reference/kmeans) -- K-Means clustering
@@ -52,7 +52,7 @@
 - [ ] [`KNNRegressor`](https://learn.flucoma.org/reference/knnregressor) -- K-Nearest Neighbour regressor
 - [ ] [`MLP`](https://learn.flucoma.org/reference/mlpclassifier) -- Multi-Layer Perceptron
 - [ ] [`SGD`](https://learn.flucoma.org/reference/mlpclassifier) -- Stochastic Gradient Descent optimiser (used by MLP)
-- [ ] [`PCA`](https://learn.flucoma.org/reference/pca) -- Principal Component Analysis
+- [X] [`PCA`](https://learn.flucoma.org/reference/pca) -- Principal Component Analysis
 - [ ] [`MDS`](https://learn.flucoma.org/reference/mds) -- Multidimensional Scaling
 - [ ] [`UMAP`](https://learn.flucoma.org/reference/umap) -- UMAP dimensionality reduction
 
