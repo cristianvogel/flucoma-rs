@@ -58,7 +58,6 @@ mod multi_stats;
 mod nmf;
 mod nmf_filter;
 mod nmf_morph;
-mod normalize;
 mod novelty_feature;
 mod novelty_seg;
 mod onset;
@@ -77,7 +76,6 @@ pub mod data {
     pub use super::multi_stats::{
         MultiStats, MultiStatsConfig, MultiStatsOutput, MultiStatsValues,
     };
-    pub use super::normalize::Normalize;
     pub use super::running_stats::RunningStats;
 }
 
