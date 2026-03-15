@@ -49,10 +49,12 @@
 mod amp_feature;
 mod amp_seg;
 mod audio_transport;
+mod bufstats;
 mod hpss;
 mod loudness;
 mod matrix;
 mod mel_bands;
+mod multi_stats;
 mod nmf;
 mod nmf_filter;
 mod nmf_morph;
@@ -60,6 +62,7 @@ mod novelty_feature;
 mod novelty_seg;
 mod onset;
 mod onset_seg;
+mod running_stats;
 mod sine;
 mod sine_extraction;
 mod stft;
@@ -68,7 +71,12 @@ mod transient_seg;
 
 /// Raw data processing and helper types.
 pub mod data {
+    pub use super::bufstats::{BufStats, BufStatsConfig};
     pub use super::matrix::Matrix;
+    pub use super::multi_stats::{
+        MultiStats, MultiStatsConfig, MultiStatsOutput, MultiStatsValues,
+    };
+    pub use super::running_stats::RunningStats;
 }
 
 /// Fast Fourier transform types and functions.
