@@ -19,11 +19,14 @@ Add the `#include` to the global `cpp! {{ }}` block, then add `create`, `destroy
 
 | Rust | cpp! annotation | Notes |
 |------|-----------------|-------|
-| `isize` | `"ptrdiff_t"` | flucoma's `index` type |
+| `FlucomaIndex` | `"ptrdiff_t"` | preferred alias for `isize`; `use flucoma_sys::FlucomaIndex` |
+| `isize` | `"ptrdiff_t"` | raw form of the above — use `FlucomaIndex` instead |
 | `f64` | `"double"` | |
 | `bool` | `"bool"` | |
-| `*const f64` | `"const double*"` | input buffers |
-| `*mut f64` | `"double*"` | output buffers |
+| `*const f64` | `"const double*"` | real input buffers |
+| `*mut f64` | `"double*"` | real output buffers |
+| `*const f64` (complex) | `"const double*"` | complex input: cast `*const Complex64` — interleaved `[re, im]` f64 pairs |
+| `*mut f64` (complex) | `"double*"` | complex output: cast `*mut Complex64` — same layout |
 | `*mut u8` | `"ClassName*"` | opaque handle |
 
 ### Allocator
@@ -45,5 +48,5 @@ Use `src/loudness.rs` (has `init()`) or `src/onset.rs` (constructor params, no `
  
 ## Wire up
 
-- Add `mod <name>;` and a `pub use` re-export in `src/lib.rs`
+- Add `mod <name>;` in `src/lib.rs` and a `pub use` re-export in the appropriate module
 - Mark done in `STATUS.md`
