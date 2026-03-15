@@ -5,25 +5,41 @@ use flucoma_sys::{
 
 use crate::matrix::Matrix;
 
+// -------------------------------------------------------------------------------------------------
+
 /// Z-score standardizer for dataset-style matrices.
 ///
-/// Learns a per-feature mean and standard deviation from a dataset and then
-/// maps each column to zero mean and unit variance.
+/// Learns a per-feature mean and standard deviation from a dataset and maps
+/// each column to zero mean and unit variance. Fit once on training data,
+/// then call [`transform`](Standardize::transform) on any same-width matrix,
+/// or [`inverse_transform`](Standardize::inverse_transform) to recover the
+/// original scale.
+///
+/// Input/output layout is row-major: `[row0_col0, row0_col1, …, rowN_colM]`.
+///
+/// # Usage
+/// ```no_run
+/// use flucoma_rs::data::{Matrix, Standardize};
+///
+/// let data = Matrix::from_vec(vec![1.0, 10.0, 3.0, 20.0, 5.0, 30.0], 3, 2).unwrap();
+/// let mut s = Standardize::new().unwrap();
+/// let scaled = s.fit_transform(&data).unwrap();
+/// let restored = s.inverse_transform(&scaled).unwrap();
+/// ```
 ///
 /// See <https://learn.flucoma.org/reference/standardize>
-///
-/// Input/output layout is row-major over points:
-/// `[row0_cols..., row1_cols..., ...]`.
 pub struct Standardize {
     inner: *mut u8,
     cols: Option<usize>,
 }
 
-// SAFETY: flucoma algorithms are thread-safe to move between threads.
 unsafe impl Send for Standardize {}
 
 impl Standardize {
     /// Create a new standardizer.
+    ///
+    /// # Errors
+    /// Returns an error if the underlying C++ allocation fails.
     pub fn new() -> Result<Self, &'static str> {
         let inner = standardization_create();
         if inner.is_null() {
@@ -32,7 +48,10 @@ impl Standardize {
         Ok(Self { inner, cols: None })
     }
 
-    /// Fit the standardizer from a row-major matrix.
+    /// Fit the standardizer to a row-major matrix.
+    ///
+    /// Computes per-column mean and standard deviation. Calling `fit` again
+    /// on new data overwrites the previously learned statistics.
     pub fn fit(&mut self, data: &Matrix) -> Result<(), &'static str> {
         standardization_fit(
             self.inner,
@@ -44,17 +63,31 @@ impl Standardize {
         Ok(())
     }
 
-    /// Transform a matrix using the fitted statistics.
+    /// Map a matrix to zero mean and unit variance using the fitted statistics.
+    ///
+    /// # Errors
+    /// Returns an error if the standardizer has not been fitted yet, or if the
+    /// matrix column count differs from the fitted feature dimension.
     pub fn transform(&self, data: &Matrix) -> Result<Matrix, &'static str> {
         self.process_internal(data, false)
     }
 
-    /// Undo a previous standardization step.
+    /// Recover the original scale by reversing a previous [`transform`](Self::transform).
+    ///
+    /// # Errors
+    /// Returns an error if the standardizer has not been fitted yet, or if the
+    /// matrix column count differs from the fitted feature dimension.
     pub fn inverse_transform(&self, data: &Matrix) -> Result<Matrix, &'static str> {
         self.process_internal(data, true)
     }
 
     /// Fit the standardizer and transform the same matrix in one step.
+    ///
+    /// Equivalent to calling [`fit`](Self::fit) followed by
+    /// [`transform`](Self::transform) on the same data.
+    ///
+    /// # Errors
+    /// Propagates errors from [`fit`](Self::fit) or [`transform`](Self::transform).
     pub fn fit_transform(&mut self, data: &Matrix) -> Result<Matrix, &'static str> {
         self.fit(data)?;
         self.transform(data)
@@ -89,6 +122,8 @@ impl Drop for Standardize {
         standardization_destroy(self.inner);
     }
 }
+
+// -------------------------------------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {

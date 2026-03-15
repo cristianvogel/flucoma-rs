@@ -8,25 +8,67 @@ use crate::normalize::Normalize;
 use crate::robust_scale::RobustScale;
 use crate::standardize::Standardize;
 
-/// Optional preprocessing scaler applied before PCA fit/transform.
-#[derive(Debug, Clone, Copy)]
-#[derive(Default)]
+// -------------------------------------------------------------------------------------------------
+
+/// Optional preprocessing scaler applied to data before PCA fit and transform.
+///
+/// Scaling often improves PCA quality when features have different units or
+/// dynamic ranges. The same scaler is automatically applied (and inverted)
+/// during [`Pca::transform`] and [`Pca::inverse_transform`].
+#[derive(Debug, Clone, Copy, Default)]
 pub enum PcaScaler {
+    /// No preprocessing -- data is passed to PCA as-is.
     #[default]
     None,
-    Normalize {
-        min: f64,
-        max: f64,
-    },
+    /// Min-max normalization into `[min, max]` per feature. Requires `min != max`.
+    Normalize { min: f64, max: f64 },
+    /// Z-score standardization to zero mean and unit variance per feature.
     Standardize,
+    /// Percentile-based robust scaling: `(x − median) / (high − low)` per feature.
     RobustScale {
         low_percentile: f64,
         high_percentile: f64,
     },
 }
 
+impl PcaScaler {
+    fn validate(&self) -> Result<(), &'static str> {
+        match self {
+            Self::None | Self::Standardize => Ok(()),
+            Self::Normalize { min, max } => {
+                if min == max {
+                    return Err("Normalize scaler requires min != max");
+                }
+                Ok(())
+            }
+            Self::RobustScale {
+                low_percentile,
+                high_percentile,
+            } => {
+                if !(0.0..=100.0).contains(low_percentile) {
+                    return Err("RobustScale low_percentile must be in [0, 100]");
+                }
+                if !(0.0..=100.0).contains(high_percentile) {
+                    return Err("RobustScale high_percentile must be in [0, 100]");
+                }
+                if low_percentile > high_percentile {
+                    return Err("RobustScale low_percentile must be <= high_percentile");
+                }
+                Ok(())
+            }
+        }
+    }
+}
 
-/// PCA settings.
+// -------------------------------------------------------------------------------------------------
+
+/// Configuration for a [`Pca`] processor.
+///
+/// * `whiten` — divide projected components by their standard deviation so
+///   each component has unit variance. Useful when feeding PCA output into a
+///   distance-based algorithm.
+/// * `scaler` — optional preprocessing scaler applied before fitting and
+///   transforming. See [`PcaScaler`].
 #[derive(Debug, Clone, Copy)]
 pub struct PcaConfig {
     pub whiten: bool,
@@ -42,6 +84,8 @@ impl Default for PcaConfig {
     }
 }
 
+// -------------------------------------------------------------------------------------------------
+
 enum FittedScaler {
     None,
     Normalize(Normalize),
@@ -49,11 +93,37 @@ enum FittedScaler {
     RobustScale(RobustScale),
 }
 
+// -------------------------------------------------------------------------------------------------
+
 /// Principal Component Analysis with optional scaler preprocessing.
 ///
 /// Learns a linear projection from a row-major matrix and can project new
-/// matrices into a lower-dimensional space, optionally applying a preprocessing
-/// scaler first.
+/// matrices into a lower-dimensional space, optionally whitening the output
+/// and/or applying a preprocessing scaler first.
+///
+/// Typical workflow:
+/// - call [`fit`](Pca::fit) (or [`fit_transform`](Pca::fit_transform)) on a training set
+/// - call [`transform`](Pca::transform) on new data to project it
+/// - optionally call [`inverse_transform`](Pca::inverse_transform) to reconstruct the original space
+///
+/// # Usage
+/// ```no_run
+/// use flucoma_rs::data::{Matrix, Pca, PcaConfig, PcaScaler};
+///
+/// let data = Matrix::from_vec(
+///     vec![1.0, 2.0, 3.0,  4.0, 5.0, 6.0,  7.0, 8.0, 9.0], 3, 3,
+/// ).unwrap();
+///
+/// let mut pca = Pca::new(PcaConfig {
+///     whiten: false,
+///     scaler: PcaScaler::Standardize,
+/// }).unwrap();
+///
+/// let (projected, explained) = pca.fit_transform(&data, 2).unwrap();
+/// println!("{:.1}% variance explained", explained * 100.0);
+///
+/// let reconstructed = pca.inverse_transform(&projected).unwrap();
+/// ```
 ///
 /// See <https://learn.flucoma.org/reference/pca>
 pub struct Pca {
@@ -63,16 +133,17 @@ pub struct Pca {
     fitted_scaler: Option<FittedScaler>,
 }
 
-// SAFETY: flucoma algorithms are thread-safe to move between threads.
 unsafe impl Send for Pca {}
 
 impl Pca {
-    /// Create a new PCA processor.
+    /// Create a new PCA processor with the given configuration.
     ///
     /// # Errors
-    /// Returns an error if the scaler configuration is invalid.
+    /// Returns an error if the scaler configuration is invalid (e.g. `min == max`
+    /// for [`PcaScaler::Normalize`], or invalid percentile range for
+    /// [`PcaScaler::RobustScale`]), or if the underlying C++ allocation fails.
     pub fn new(config: PcaConfig) -> Result<Self, &'static str> {
-        validate_scaler_config(config.scaler)?;
+        config.scaler.validate()?;
         let inner = pca_create();
         if inner.is_null() {
             return Err("failed to create PCA instance");
@@ -85,11 +156,18 @@ impl Pca {
         })
     }
 
+    /// Return the configuration this processor was created with.
     pub fn config(&self) -> PcaConfig {
         self.config
     }
 
-    /// Fit the PCA model from a row-major matrix.
+    /// Fit the PCA model on a row-major matrix.
+    ///
+    /// If a scaler is configured, it is fitted and applied to `data` before
+    /// the PCA decomposition. Calling `fit` again overwrites the model.
+    ///
+    /// # Errors
+    /// Propagates errors from the configured scaler's fit step.
     pub fn fit(&mut self, data: &Matrix) -> Result<(), &'static str> {
         let (scaled_data, fitted_scaler) = self.fit_scaler_and_transform(data)?;
         pca_fit(
@@ -103,7 +181,19 @@ impl Pca {
         Ok(())
     }
 
-    /// Fit the model and project the same matrix in one step.
+    /// Fit the model and project the training matrix in one step.
+    ///
+    /// Equivalent to calling [`fit`](Self::fit) followed by
+    /// [`transform`](Self::transform) on the same data. Returns
+    /// `(projected, explained_variance_ratio)`. See [`transform`](Self::transform)
+    /// for details on the return value.
+    ///
+    /// # Arguments
+    /// * `data` - Row-major training matrix.
+    /// * `target_dims` - Number of principal components to keep.
+    ///
+    /// # Errors
+    /// Propagates errors from [`fit`](Self::fit) or [`transform`](Self::transform).
     pub fn fit_transform(
         &mut self,
         data: &Matrix,
@@ -113,9 +203,28 @@ impl Pca {
         self.transform(data, target_dims)
     }
 
-    /// Project a matrix to `target_dims`; returns
-    /// `(projected_matrix, explained_variance_ratio)`.
-    pub fn transform(&self, data: &Matrix, target_dims: usize) -> Result<(Matrix, f64), &'static str> {
+    /// Project a matrix into a lower-dimensional space.
+    ///
+    /// Applies the same preprocessing scaler used during [`fit`](Self::fit),
+    /// then projects the data onto the leading `target_dims` principal
+    /// components. Returns `(projected, explained_variance_ratio)` where
+    /// `projected` has shape `(data.rows(), target_dims)` and
+    /// `explained_variance_ratio` is in `[0, 1]`.
+    ///
+    /// # Arguments
+    /// * `data` - Row-major input matrix. Column count must match the
+    ///   dimension the model was fitted on.
+    /// * `target_dims` - Number of principal components to keep. Must be in
+    ///   `[1, data.cols()]`.
+    ///
+    /// # Errors
+    /// Returns an error if the model is not fitted, if `data.cols()` does not
+    /// match the fitted dimension, or if `target_dims` is out of range.
+    pub fn transform(
+        &self,
+        data: &Matrix,
+        target_dims: usize,
+    ) -> Result<(Matrix, f64), &'static str> {
         self.ensure_fitted(data.cols())?;
         if target_dims == 0 {
             return Err("target_dims must be > 0");
@@ -138,7 +247,18 @@ impl Pca {
         Ok((out, explained))
     }
 
-    /// Inverse-transform projected PCA data back to the original feature space.
+    /// Reconstruct data in the original feature space from a projected matrix.
+    ///
+    /// Reverses the PCA projection and, if a scaler was configured, the
+    /// preprocessing step as well. The reconstruction is exact only when
+    /// `projected.cols() == fitted_dims`; with fewer components it is a
+    /// low-rank approximation.
+    ///
+    /// Returns a matrix with shape `(projected.rows(), fitted_dims)`.
+    ///
+    /// # Errors
+    /// Returns an error if the model is not fitted, or if
+    /// `projected.cols() > fitted_dims`.
     pub fn inverse_transform(&self, projected: &Matrix) -> Result<Matrix, &'static str> {
         let cols = self.dims.ok_or("PCA is not fitted")?;
         if projected.cols() > cols {
@@ -153,7 +273,8 @@ impl Pca {
             let src_end = src_start + projected.cols();
             let dst_start = r * cols;
             let dst_end = dst_start + projected.cols();
-            padded.data_mut()[dst_start..dst_end].copy_from_slice(&projected.data()[src_start..src_end]);
+            padded.data_mut()[dst_start..dst_end]
+                .copy_from_slice(&projected.data()[src_start..src_end]);
         }
 
         let mut recon_scaled = Matrix::new(projected.rows(), cols);
@@ -169,10 +290,13 @@ impl Pca {
         self.apply_scaler_inverse_transform(&recon_scaled)
     }
 
+    /// Return `true` if the model has been fitted at least once.
     pub fn is_fitted(&self) -> bool {
         pca_initialized(self.inner)
     }
 
+    /// Return the number of features (columns) the model was fitted on, or
+    /// `None` if the model has not been fitted yet.
     pub fn dims(&self) -> Option<usize> {
         if !self.is_fitted() {
             return None;
@@ -242,32 +366,7 @@ impl Drop for Pca {
     }
 }
 
-fn validate_scaler_config(scaler: PcaScaler) -> Result<(), &'static str> {
-    match scaler {
-        PcaScaler::None | PcaScaler::Standardize => Ok(()),
-        PcaScaler::Normalize { min, max } => {
-            if min == max {
-                return Err("Normalize scaler requires min != max");
-            }
-            Ok(())
-        }
-        PcaScaler::RobustScale {
-            low_percentile,
-            high_percentile,
-        } => {
-            if !(0.0..=100.0).contains(&low_percentile) {
-                return Err("RobustScale low_percentile must be in [0, 100]");
-            }
-            if !(0.0..=100.0).contains(&high_percentile) {
-                return Err("RobustScale high_percentile must be in [0, 100]");
-            }
-            if low_percentile > high_percentile {
-                return Err("RobustScale low_percentile must be <= high_percentile");
-            }
-            Ok(())
-        }
-    }
-}
+// -------------------------------------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
@@ -275,16 +374,20 @@ mod tests {
 
     fn sample_data() -> Matrix {
         // 8 x 3 row-major
-        Matrix::from_vec(vec![
-            1.0, 2.0, 0.9, //
-            1.2, 2.2, 1.1, //
-            0.8, 1.7, 0.7, //
-            3.0, 3.2, 2.9, //
-            2.8, 3.0, 2.6, //
-            10.0, -8.0, 9.0, //
-            2.9, 3.1, 2.7, //
-            1.1, 2.1, 1.0,
-        ], 8, 3)
+        Matrix::from_vec(
+            vec![
+                1.0, 2.0, 0.9, //
+                1.2, 2.2, 1.1, //
+                0.8, 1.7, 0.7, //
+                3.0, 3.2, 2.9, //
+                2.8, 3.0, 2.6, //
+                10.0, -8.0, 9.0, //
+                2.9, 3.1, 2.7, //
+                1.1, 2.1, 1.0,
+            ],
+            8,
+            3,
+        )
         .unwrap()
     }
 

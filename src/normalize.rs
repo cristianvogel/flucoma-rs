@@ -5,15 +5,29 @@ use flucoma_sys::{
 
 use crate::matrix::Matrix;
 
+// -------------------------------------------------------------------------------------------------
+
 /// Min-max normalizer for dataset-style matrices.
 ///
 /// Learns per-column minimum and maximum values from a dataset and maps each
-/// feature into the configured range.
+/// feature into a configured output range `[min, max]`. Fit once on training
+/// data, then call [`transform`](Normalize::transform) on any same-width
+/// matrix, or [`inverse_transform`](Normalize::inverse_transform) to recover
+/// the original scale.
+///
+/// Input/output layout is row-major: `[row0_col0, row0_col1, …, rowN_colM]`.
+///
+/// # Usage
+/// ```no_run
+/// use flucoma_rs::data::{Matrix, Normalize};
+///
+/// let data = Matrix::from_vec(vec![1.0, 10.0, 3.0, 20.0, 5.0, 30.0], 3, 2).unwrap();
+/// let mut n = Normalize::new(0.0, 1.0).unwrap();
+/// let scaled = n.fit_transform(&data).unwrap();
+/// let restored = n.inverse_transform(&scaled).unwrap();
+/// ```
 ///
 /// See <https://learn.flucoma.org/reference/normalize>
-///
-/// Input/output layout is row-major over points:
-/// `[row0_cols..., row1_cols..., ...]`.
 pub struct Normalize {
     inner: *mut u8,
     min: f64,
@@ -21,11 +35,14 @@ pub struct Normalize {
     cols: Option<usize>,
 }
 
-// SAFETY: flucoma algorithms are thread-safe to move between threads.
 unsafe impl Send for Normalize {}
 
 impl Normalize {
     /// Create a new min-max normalizer targeting the inclusive range `[min, max]`.
+    ///
+    /// # Arguments
+    /// * `min` - Lower bound of the output range.
+    /// * `max` - Upper bound of the output range. Must differ from `min`.
     ///
     /// # Errors
     /// Returns an error if `min == max`.
@@ -45,7 +62,10 @@ impl Normalize {
         })
     }
 
-    /// Fit the normalizer from a row-major matrix.
+    /// Fit the normalizer to a row-major matrix.
+    ///
+    /// Computes per-column minimum and maximum values. Calling `fit` again
+    /// on new data overwrites the previously learned statistics.
     pub fn fit(&mut self, data: &Matrix) -> Result<(), &'static str> {
         normalization_fit(
             self.inner,
@@ -59,7 +79,7 @@ impl Normalize {
         Ok(())
     }
 
-    /// Transform a matrix into the fitted output range.
+    /// Map a matrix into the fitted output range.
     ///
     /// # Errors
     /// Returns an error if the normalizer has not been fitted yet, or if the
@@ -68,12 +88,22 @@ impl Normalize {
         self.process_internal(data, false)
     }
 
-    /// Undo a previous min-max transform.
+    /// Recover the original scale by reversing a previous [`transform`](Self::transform).
+    ///
+    /// # Errors
+    /// Returns an error if the normalizer has not been fitted yet, or if the
+    /// matrix column count differs from the fitted feature dimension.
     pub fn inverse_transform(&self, data: &Matrix) -> Result<Matrix, &'static str> {
         self.process_internal(data, true)
     }
 
     /// Fit the normalizer and transform the same matrix in one step.
+    ///
+    /// Equivalent to calling [`fit`](Self::fit) followed by
+    /// [`transform`](Self::transform) on the same data.
+    ///
+    /// # Errors
+    /// Propagates errors from [`fit`](Self::fit) or [`transform`](Self::transform).
     pub fn fit_transform(&mut self, data: &Matrix) -> Result<Matrix, &'static str> {
         self.fit(data)?;
         self.transform(data)
@@ -108,6 +138,8 @@ impl Drop for Normalize {
         normalization_destroy(self.inner);
     }
 }
+
+// -------------------------------------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {

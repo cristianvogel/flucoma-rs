@@ -5,15 +5,31 @@ use flucoma_sys::{
 
 use crate::matrix::Matrix;
 
+// -------------------------------------------------------------------------------------------------
+
 /// Percentile-based robust scaler for dataset-style matrices.
 ///
-/// Uses `(x - median) / (high_percentile - low_percentile)` per feature,
-/// which is less sensitive to outliers than min-max or z-score scaling.
+/// Scales each feature column by its interquartile range (or any custom
+/// percentile pair): `(x − median) / (high_percentile − low_percentile)`.
+/// Less sensitive to outliers than min-max or z-score scaling.
+///
+/// Fit once on training data, then call [`transform`](RobustScale::transform)
+/// on any same-width matrix, or [`inverse_transform`](RobustScale::inverse_transform)
+/// to recover the original scale.
+///
+/// Input/output layout is row-major: `[row0_col0, row0_col1, …, rowN_colM]`.
+///
+/// # Usage
+/// ```no_run
+/// use flucoma_rs::data::{Matrix, RobustScale};
+///
+/// let data = Matrix::from_vec(vec![1.0, 10.0, 3.0, 20.0, 5.0, 30.0], 3, 2).unwrap();
+/// let mut r = RobustScale::new(25.0, 75.0).unwrap();
+/// let scaled = r.fit_transform(&data).unwrap();
+/// let restored = r.inverse_transform(&scaled).unwrap();
+/// ```
 ///
 /// See <https://learn.flucoma.org/reference/robustscale>
-///
-/// Input/output layout is row-major over points:
-/// `[row0_cols..., row1_cols..., ...]`.
 pub struct RobustScale {
     inner: *mut u8,
     low_percentile: f64,
@@ -21,14 +37,18 @@ pub struct RobustScale {
     cols: Option<usize>,
 }
 
-// SAFETY: flucoma algorithms are thread-safe to move between threads.
 unsafe impl Send for RobustScale {}
 
 impl RobustScale {
     /// Create a robust scaler using the given percentile range per feature.
     ///
+    /// # Arguments
+    /// * `low_percentile`  - Lower percentile bound, in `[0, 100]`.
+    /// * `high_percentile` - Upper percentile bound, in `[0, 100]`. Must be ≥ `low_percentile`.
+    ///
     /// # Errors
-    /// Returns an error if the percentile range is invalid.
+    /// Returns an error if either percentile is outside `[0, 100]` or if
+    /// `low_percentile > high_percentile`.
     pub fn new(low_percentile: f64, high_percentile: f64) -> Result<Self, &'static str> {
         if !(0.0..=100.0).contains(&low_percentile) {
             return Err("low_percentile must be in [0, 100]");
@@ -51,7 +71,10 @@ impl RobustScale {
         })
     }
 
-    /// Fit the scaler from a row-major matrix.
+    /// Fit the scaler to a row-major matrix.
+    ///
+    /// Computes per-column medians and percentile-based spread. Calling `fit`
+    /// again on new data overwrites the previously learned statistics.
     pub fn fit(&mut self, data: &Matrix) -> Result<(), &'static str> {
         robust_scaling_fit(
             self.inner,
@@ -65,17 +88,31 @@ impl RobustScale {
         Ok(())
     }
 
-    /// Transform a matrix using the fitted percentile statistics.
+    /// Scale a matrix using the fitted percentile statistics.
+    ///
+    /// # Errors
+    /// Returns an error if the scaler has not been fitted yet, or if the
+    /// matrix column count differs from the fitted feature dimension.
     pub fn transform(&self, data: &Matrix) -> Result<Matrix, &'static str> {
         self.process_internal(data, false)
     }
 
-    /// Undo a previous robust scaling step.
+    /// Recover the original scale by reversing a previous [`transform`](Self::transform).
+    ///
+    /// # Errors
+    /// Returns an error if the scaler has not been fitted yet, or if the
+    /// matrix column count differs from the fitted feature dimension.
     pub fn inverse_transform(&self, data: &Matrix) -> Result<Matrix, &'static str> {
         self.process_internal(data, true)
     }
 
     /// Fit the scaler and transform the same matrix in one step.
+    ///
+    /// Equivalent to calling [`fit`](Self::fit) followed by
+    /// [`transform`](Self::transform) on the same data.
+    ///
+    /// # Errors
+    /// Propagates errors from [`fit`](Self::fit) or [`transform`](Self::transform).
     pub fn fit_transform(&mut self, data: &Matrix) -> Result<Matrix, &'static str> {
         self.fit(data)?;
         self.transform(data)
@@ -111,14 +148,16 @@ impl Drop for RobustScale {
     }
 }
 
+// -------------------------------------------------------------------------------------------------
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn robust_scale_then_inverse_returns_input() {
-        let data = Matrix::from_vec(vec![1.0, 10.0, 3.0, 20.0, 5.0, 30.0, 1000.0, -999.0], 4, 2)
-            .unwrap();
+        let data =
+            Matrix::from_vec(vec![1.0, 10.0, 3.0, 20.0, 5.0, 30.0, 1000.0, -999.0], 4, 2).unwrap();
         let mut r = RobustScale::new(25.0, 75.0).unwrap();
         let scaled = r.fit_transform(&data).unwrap();
         let inv = r.inverse_transform(&scaled).unwrap();
