@@ -2,6 +2,38 @@ use flucoma_sys::{multistats_create, multistats_destroy, multistats_init, multis
 
 use crate::multi_stats::{outputs_from_raw, zero_outputs, MultiStatsOutput};
 
+
+
+/// Offline summary statistics over a selected region of a multichannel buffer.
+///
+/// This wrapper mirrors the buffer-slicing behaviour of FluCoMa `BufStats`:
+/// it selects a frame range and channel range from the source buffer and then
+/// returns one [`MultiStatsOutput`] per selected channel.
+///
+/// Unlike [`crate::data::MultiStats`], which always analyses the whole input
+/// region passed to it, `BufStats` carries the slice selection in
+/// [`BufStatsConfig`].
+///
+/// # Usage
+/// ```no_run
+/// use flucoma_rs::data::{BufStats, BufStatsConfig};
+///
+/// let mut stats = BufStats::new(BufStatsConfig::default()).unwrap();
+/// let source = vec![1.0f64, 2.0, 3.0, 4.0];
+/// let channels = stats.process(&source, 4, 1, None).unwrap();
+/// assert_eq!(channels.len(), 1);
+/// println!("mean = {}", channels[0].stats.mean);
+/// ```
+///
+/// See <https://learn.flucoma.org/reference/bufstats>
+///
+/// Input layout is interleaved:
+/// `[channel0_frames..., channel1_frames..., ...]`.
+pub struct BufStats {
+    inner: *mut u8,
+    config: BufStatsConfig,
+}
+
 const STATS_PER_DERIVATIVE: usize = 7;
 
 /// Configuration for [`BufStats`].
@@ -34,19 +66,16 @@ impl Default for BufStatsConfig {
     }
 }
 
-/// BufStats-style offline statistics wrapper built on `MultiStats`.
-///
-/// Input layout is channel-major:
-/// `[channel0_frames..., channel1_frames..., ...]`.
-pub struct BufStats {
-    inner: *mut u8,
-    config: BufStatsConfig,
-}
-
 // SAFETY: flucoma algorithms are thread-safe to move between threads.
 unsafe impl Send for BufStats {}
 
 impl BufStats {
+    /// Create a new `BufStats` processor with the given slicing/statistics
+    /// configuration.
+    ///
+    /// # Errors
+    /// Returns an error if the configuration is invalid or if the underlying
+    /// FluCoMa instance cannot be allocated.
     pub fn new(config: BufStatsConfig) -> Result<Self, &'static str> {
         validate_config(&config)?;
         let inner = multistats_create();
@@ -60,15 +89,31 @@ impl BufStats {
         &self.config
     }
 
+    /// Replace the current configuration.
+    ///
+    /// # Errors
+    /// Returns an error if the new configuration is invalid.
     pub fn set_config(&mut self, config: BufStatsConfig) -> Result<(), &'static str> {
         validate_config(&config)?;
         self.config = config;
         Ok(())
     }
 
-    /// Compute summary statistics over a selected channel-major buffer region.
+    /// Compute summary statistics over a selected region of an interleaved
+    /// multichannel buffer.
     ///
     /// `source` layout is `[channel0_frames..., channel1_frames..., ...]`.
+    ///
+    /// # Arguments
+    /// * `source` - Interleaved samples for all channels.
+    /// * `source_num_frames` - Number of frames per channel in `source`.
+    /// * `source_num_channels` - Number of channels in `source`.
+    /// * `weights` - Optional per-frame weights for the selected frame span.
+    ///
+    /// # Errors
+    /// Returns an error if the source shape is inconsistent, the configured
+    /// frame/channel selection is out of range, or the weights length does not
+    /// match the selected frame span.
     pub fn process(
         &mut self,
         source: &[f64],

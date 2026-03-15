@@ -2,6 +2,60 @@ use flucoma_sys::{
     multistats_create, multistats_destroy, multistats_init, multistats_process, FlucomaIndex,
 };
 
+// -------------------------------------------------------------------------------------------------
+
+/// Offline summary statistics over multi-channel time-series data.
+///
+/// Computes the standard FluCoMa statistics (mean, standard deviation, skew,
+/// kurtosis, and three percentile values) for each channel, optionally also
+/// summarising the first and second derivatives.
+///
+/// The result contains one [`MultiStatsOutput`] per channel.
+///
+/// # Usage
+/// ```no_run
+/// use flucoma_rs::data::{MultiStats, MultiStatsConfig};
+///
+/// let mut stats = MultiStats::new(MultiStatsConfig::default()).unwrap();
+/// let input = vec![1.0f64, 2.0, 3.0, 4.0];
+/// let channels = stats.process(&input, 4, 1, None).unwrap();
+/// assert_eq!(channels.len(), 1);
+/// println!("mean = {}", channels[0].stats.mean);
+/// ```
+///
+/// See <https://learn.flucoma.org/reference/bufstats>
+///
+/// Input layout is interleaved:
+/// `[channel0_frames..., channel1_frames..., ...]`.
+pub struct MultiStats {
+    inner: *mut u8,
+    config: MultiStatsConfig,
+}
+
+/// Seven summary statistics for one derivative order.
+///
+/// Each value stores the standard FluCoMa summary descriptors for one signal
+/// stream or derivative stream:
+/// - `mean`
+/// - `std`
+/// - `skew`
+/// - `kurtosis`
+/// - `low`
+/// - `mid`
+/// - `high`
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct MultiStatsValues {
+    pub mean: f64,
+    pub std: f64,
+    pub skew: f64,
+    pub kurtosis: f64,
+    pub low: f64,
+    pub mid: f64,
+    pub high: f64,
+}
+
+
+
 const STATS_PER_DERIVATIVE: usize = 7;
 
 /// Configuration for [`MultiStats`].
@@ -26,17 +80,7 @@ impl Default for MultiStatsConfig {
     }
 }
 
-/// Seven summary statistics for one derivative order.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct MultiStatsValues {
-    pub mean: f64,
-    pub std: f64,
-    pub skew: f64,
-    pub kurtosis: f64,
-    pub low: f64,
-    pub mid: f64,
-    pub high: f64,
-}
+
 
 impl MultiStatsValues {
     pub(crate) fn from_slice(slice: &[f64]) -> Self {
@@ -64,7 +108,12 @@ impl MultiStatsValues {
     }
 }
 
-/// Per-channel output of `MultiStats`/`BufStats`, with optional derivatives.
+/// Per-channel output of [`MultiStats`] and [`crate::data::BufStats`].
+///
+/// `stats` contains the summary values for the original signal. When
+/// derivatives are enabled in the configuration, `derivative_1` and
+/// `derivative_2` contain the same seven-value summary for the first and
+/// second temporal derivative respectively.
 #[derive(Debug, Clone, PartialEq)]
 pub struct MultiStatsOutput {
     pub stats: MultiStatsValues,
@@ -103,19 +152,16 @@ pub(crate) fn outputs_from_raw(
         .collect()
 }
 
-/// Computes summary statistics over channel-major multi-channel data.
-///
-/// Input layout is channel-major:
-/// `[channel0_frames..., channel1_frames..., ...]`.
-pub struct MultiStats {
-    inner: *mut u8,
-    config: MultiStatsConfig,
-}
 
 // SAFETY: flucoma algorithms are thread-safe to move between threads.
 unsafe impl Send for MultiStats {}
 
 impl MultiStats {
+    /// Create a new `MultiStats` processor with the given configuration.
+    ///
+    /// # Errors
+    /// Returns an error if the percentile or derivative settings are invalid,
+    /// or if the underlying FluCoMa instance cannot be allocated.
     pub fn new(config: MultiStatsConfig) -> Result<Self, &'static str> {
         validate_config(&config)?;
         let inner = multistats_create();
@@ -129,15 +175,30 @@ impl MultiStats {
         &self.config
     }
 
+    /// Replace the current configuration.
+    ///
+    /// # Errors
+    /// Returns an error if the new configuration is invalid.
     pub fn set_config(&mut self, config: MultiStatsConfig) -> Result<(), &'static str> {
         validate_config(&config)?;
         self.config = config;
         Ok(())
     }
 
-    /// Compute summary statistics over channel-major input data.
+    /// Compute summary statistics over an interleaved multi-channel buffer.
     ///
     /// `input` layout is `[channel0_frames..., channel1_frames..., ...]`.
+    ///
+    /// # Arguments
+    /// * `input` - Interleaved samples for all channels.
+    /// * `num_frames` - Number of frames per channel.
+    /// * `num_channels` - Number of channels in `input`.
+    /// * `weights` - Optional per-frame weights, shared across channels.
+    ///
+    /// # Errors
+    /// Returns an error if the input shape is inconsistent, if
+    /// `num_frames <= num_derivatives`, or if the weight vector length does
+    /// not match `num_frames`.
     pub fn process(
         &mut self,
         input: &[f64],

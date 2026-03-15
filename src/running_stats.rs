@@ -2,7 +2,28 @@ use flucoma_sys::{
     running_stats_create, running_stats_destroy, running_stats_init, running_stats_process,
 };
 
+// -------------------------------------------------------------------------------------------------
+
 /// Incremental running mean and sample standard deviation.
+///
+/// Maintains a sliding history of recent vectors and updates the running mean
+/// and sample standard deviation for each element position every time a new
+/// vector is processed.
+///
+/// This is the online counterpart to the offline statistics wrappers:
+/// [`crate::data::MultiStats`] and [`crate::data::BufStats`].
+///
+/// # Usage
+/// ```no_run
+/// use flucoma_rs::data::RunningStats;
+///
+/// let mut stats = RunningStats::new(8, 2).unwrap();
+/// let (mean, stddev) = stats.process(&[1.0, 2.0]);
+/// assert_eq!(mean.len(), 2);
+/// assert_eq!(stddev.len(), 2);
+/// ```
+///
+/// See <https://learn.flucoma.org/reference/runningstats>
 pub struct RunningStats {
     inner: *mut u8,
     history_size: usize,
@@ -16,6 +37,14 @@ unsafe impl Send for RunningStats {}
 
 impl RunningStats {
     /// Create and initialize a running statistics processor.
+    ///
+    /// # Arguments
+    /// * `history_size` - Number of past vectors kept in the running window.
+    /// * `input_size` - Length of each processed input vector.
+    ///
+    /// # Errors
+    /// Returns an error if `history_size < 2`, `input_size == 0`, or if the
+    /// underlying FluCoMa instance cannot be allocated.
     pub fn new(history_size: usize, input_size: usize) -> Result<Self, &'static str> {
         if history_size < 2 {
             return Err("history_size must be >= 2");
@@ -40,7 +69,10 @@ impl RunningStats {
     /// Process one input vector and return `(mean, sample_std_dev)`.
     ///
     /// Returned slices point to internal buffers and are valid until the next call.
-    pub fn process<'a>(&'a mut self, input: &[f64]) -> (&'a [f64], &'a [f64]) {
+    ///
+    /// # Panics
+    /// Panics if `input.len() != input_size()`.
+    pub fn process(&mut self, input: &[f64]) -> (&[f64], &[f64]) {
         assert_eq!(
             input.len(),
             self.input_size,
@@ -59,6 +91,9 @@ impl RunningStats {
     }
 
     /// Reset internal history.
+    ///
+    /// After `clear`, the next call to [`RunningStats::process`] behaves as if
+    /// it were the first observation in a new running window.
     pub fn clear(&mut self) {
         running_stats_init(
             self.inner,
